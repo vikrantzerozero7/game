@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>⚔️ Prince of Persia — Infinite Stages</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="gameContainer">
+  <canvas id="game" width="1280" height="720"></canvas>
+
+  <div id="hud">
+    <div class="hud-group">
+      <span class="hearts" id="hearts">❤❤❤</span>
+      <span class="world-name" id="worldName">🏜️ Sand</span>
+      <span class="fly-indicator" id="flyIndicator">🕊️ FLY</span>
+      <span class="shield-indicator" id="shieldIndicator">🛡️ SHIELD</span>
+    </div>
+    <div class="hud-group">
+      <span class="timer" id="timer">⏳ 90</span>
+      <span style="color:#ffd27f;">🏆 <span id="score">0</span></span>
+    </div>
+  </div>
+
+  <div id="mobileControls">
+    <div class="mobile-group">
+      <div class="mbtn" data-key="ArrowLeft">◀</div>
+      <div class="mbtn" data-key="ArrowRight">▶</div>
+    </div>
+    <div class="mobile-group">
+      <div class="mbtn shield-btn" data-key="g" id="mobileShieldBtn">🛡️</div>
+      <div class="mbtn fly-btn" data-key="f">🕊️</div>
+      <div class="mbtn" data-key="ArrowUp">▲</div>
+      <div class="mbtn" data-key="ArrowDown">▼</div>
+      <div class="mbtn" data-key="Shift">⚔</div>
+    </div>
+  </div>
+
+  <div id="damageFlash"></div>
+  <div id="shieldFlash"></div>
+  <div id="shieldBreakFlash"></div>
+  <div id="worldBanner"></div>
+
+  <div id="tutorialScreen" class="overlay">
+    <h2>⚔️ PRINCE OF PERSIA</h2>
+    <p style="color:#b8a080;letter-spacing:2px;font-size:clamp(11px,1.5vw,15px);">Master the controls, then begin your quest!</p>
+    <div class="tut-grid">
+      <div class="tut-item"><b>◀ ▶ / A D</b>Move left &amp; right</div>
+      <div class="tut-item"><b>▲ / SPACE / W</b>Jump</div>
+      <div class="tut-item"><b>🛡️ G</b>Shield — blocks ALL damage from every side</div>
+      <div class="tut-item"><b>🕊️ F (hold)</b>Fly — use ▲/▼ to rise &amp; fall</div>
+      <div class="tut-item"><b>⚔ SHIFT</b>Attack — sword slash</div>
+      <div class="tut-item"><b>⏳ TIMER</b>Reach the glowing exit before time runs out</div>
+    </div>
+    <p style="font-size:clamp(10px,1.3vw,13px);color:#ff8a40;margin-top:14px;letter-spacing:1px;">⚠️ Fly &amp; Shield can be used together — both drain energy simultaneously!</p>
+    <button class="tut-btn" id="tutStartBtn">Begin Quest</button>
+  </div>
+
+  <div class="overlay hidden" id="gameOverScreen">
+    <h1 style="color:#ff5555;">💀 YOU DIED</h1>
+    <p>The sands consume all...</p>
+    <p style="font-size: 13px;" id="deathReason">Fallen in battle</p>
+    <button class="btn" id="retryBtn">Try Again</button>
+  </div>
+
+  <div class="overlay hidden" id="victoryScreen">
+    <h1>🏆 VICTORY</h1>
+    <p>The Prince has conquered all worlds!</p>
+    <p style="font-size: 14px;">Final Score: <span id="finalScore">0</span></p>
+    <button class="btn" id="playAgainBtn">Play Again</button>
+  </div>
+</div>
+
+<script src="stages.js"></script>
+<script src="powers.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

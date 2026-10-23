@@ -1,0 +1,132 @@
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body { font-family: 'Georgia', 'Times New Roman', serif; color: #e8d5a8; display: flex; justify-content: center; align-items: center; touch-action: none; }
+#gameContainer {
+  position: relative; width: 100%; max-width: 1100px; aspect-ratio: 16 / 9;
+  background: #0a0603; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 0 80px rgba(210, 130, 40, 0.25), 0 0 0 2px #3a2a15;
+}
+canvas#game { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+#hud {
+  position: absolute; top: 0; left: 0; right: 0; padding: 10px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none; font-size: clamp(11px, 1.5vw, 15px); letter-spacing: 1.5px;
+  text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 2px 0 #000; z-index: 10;
+}
+.hud-group { display: flex; align-items: center; gap: 14px; }
+.hearts { color: #ff4040; font-size: 1.3em; letter-spacing: 3px; filter: drop-shadow(0 0 6px #ff0000aa); }
+.timer { color: #ffd27f; }
+.timer.warn { color: #ff5555; animation: pulse 0.5s infinite; }
+@keyframes pulse { 50% { opacity: 0.4; } }
+.world-name {
+  color: #ffd27f; font-weight: bold; padding: 3px 12px;
+  background: rgba(0,0,0,0.5); border: 1px solid #8b6f3a; border-radius: 20px; font-size: 0.9em;
+}
+.fly-indicator {
+  color: #7fd0ff; font-weight: bold; padding: 3px 10px;
+  background: rgba(0,0,0,0.5); border: 1px solid #2a6890; border-radius: 20px; font-size: 0.85em;
+  opacity: 0.5; transition: opacity 0.2s;
+}
+.fly-indicator.active { opacity: 1; color: #a0e8ff; border-color: #7fd0ff; box-shadow: 0 0 10px #7fd0ffaa; }
+.shield-indicator {
+  color: #7fbfff; font-weight: bold; padding: 3px 10px;
+  background: rgba(0,0,0,0.5); border: 1px solid #2a5a90; border-radius: 20px; font-size: 0.85em;
+  opacity: 0.5; transition: opacity 0.2s;
+}
+.shield-indicator.active { opacity: 1; color: #a0d8ff; border-color: #7fbfff; box-shadow: 0 0 10px #7fbfffaa; }
+.shield-indicator.broken { opacity: 1; color: #ff5555; border-color: #ff3030; box-shadow: 0 0 10px #ff3030aa; animation: pulse 0.4s infinite; }
+.overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  background: radial-gradient(circle, rgba(20,10,5,0.88), rgba(0,0,0,0.98));
+  z-index: 20; text-align: center; padding: 20px; backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+.overlay.hidden { display: none; }
+.overlay h1 {
+  font-size: clamp(26px, 5vw, 52px); color: #ffd27f; letter-spacing: 4px;
+  text-shadow: 0 0 20px rgba(255,200,100,0.8), 0 4px 0 #3a2a15;
+  margin-bottom: 8px; animation: glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+  from { text-shadow: 0 0 12px rgba(255,200,100,0.5), 0 4px 0 #3a2a15; }
+  to { text-shadow: 0 0 30px rgba(255,200,100,1), 0 4px 0 #3a2a15; }
+}
+.overlay p { font-size: clamp(12px, 1.6vw, 16px); color: #b8a080; margin: 6px 0; letter-spacing: 2px; }
+.btn {
+  margin-top: 22px; padding: 12px 38px; font-family: inherit; font-size: clamp(14px, 1.8vw, 17px);
+  letter-spacing: 3px; color: #1a0e05; background: linear-gradient(180deg, #ffd27f, #c8943a);
+  border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold;
+  box-shadow: 0 6px 0 #5a4020, 0 8px 20px rgba(0,0,0,0.6); transition: 0.1s;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #5a4020, 0 10px 24px rgba(0,0,0,0.7); }
+.btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #5a4020; }
+#mobileControls {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 14px 18px;
+  display: none; justify-content: space-between; pointer-events: none; z-index: 15;
+}
+.mobile-group { display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
+.mbtn {
+  width: 58px; height: 58px; border-radius: 50%; background: rgba(30,20,10,0.8);
+  border: 2px solid #8b6f3a; color: #ffd27f; font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0,0,0,0.6); font-weight: bold;
+  touch-action: none;
+}
+.mbtn:active { transform: scale(0.92); background: rgba(255,200,100,0.3); }
+.mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 16px; }
+.mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 16px; }
+.mbtn.shield-btn.broken { border-color: #ff3030; color: #ff5555; box-shadow: 0 0 12px #ff3030aa; animation: pulse 0.4s infinite; }
+@media (max-width: 768px), (pointer: coarse) { #mobileControls { display: flex; } }
+#damageFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s;
+}
+#shieldFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, #7fbfff 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.15s;
+}
+#shieldBreakFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, #ff3030 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.4s;
+}
+#worldBanner {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+  color: #ffd27f; font-size: clamp(28px, 6vw, 56px); font-weight: bold; letter-spacing: 6px;
+  text-shadow: 0 0 30px rgba(255,200,100,1), 0 4px 0 #3a2a15;
+  z-index: 25; pointer-events: none; transition: transform 0.4s, opacity 0.4s; opacity: 0; text-align: center;
+}
+#worldBanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+#tutorialScreen {
+  position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; padding: 18px;
+  background: radial-gradient(circle at 50% 40%, rgba(30,18,8,0.97), rgba(0,0,0,0.99));
+  transition: opacity 0.5s;
+}
+#tutorialScreen.hidden { display: none; }
+#tutorialScreen h2 {
+  font-size: clamp(22px, 4vw, 38px); color: #ffd27f; letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(255,200,100,0.7); margin-bottom: 10px;
+}
+.tut-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
+  max-width: 760px; width: 100%; margin-top: 14px;
+}
+.tut-item {
+  background: rgba(255,255,255,0.04); border: 1px solid #5a4020; border-radius: 10px;
+  padding: 10px 12px; text-align: left; font-size: clamp(10px, 1.3vw, 13px); color: #c8b090;
+  line-height: 1.5;
+}
+.tut-item b { color: #ffd27f; display: block; font-size: 1.05em; margin-bottom: 3px; letter-spacing: 1px; }
+.tut-btn {
+  margin-top: 20px; padding: 12px 44px; font-family: inherit; font-size: clamp(14px, 1.8vw, 17px);
+  letter-spacing: 3px; color: #1a0e05; background: linear-gradient(180deg, #8aff70, #4aa02a);
+  border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-weight: bold;
+  box-shadow: 0 6px 0 #2a5a1a, 0 8px 20px rgba(0,0,0,0.6); transition: 0.1s;
+}
+.tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
+@media (max-width: 500px) {
+  .mbtn { width: 48px; height: 48px; font-size: 16px; }
+  #mobileControls { padding: 10px 12px; }
+  #hud { padding: 6px 10px; }
+}
