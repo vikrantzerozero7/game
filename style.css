@@ -36,8 +36,8 @@ canvas#game {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: cover; /* Default cover taaki screen bhar jaye */
   image-rendering: pixelated;
-  /* Mobile me auto-fit hoga, Desktop par normal */
 }
 
 /* ============================================================
@@ -243,7 +243,7 @@ canvas#game {
 .tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
 
 /* ============================================================
-   MOBILE FULL-SCREEN OVERRIDES (YOUTUBE STYLE)
+   MOBILE FULL-SCREEN OVERRIDES (NO BLACK BARS, FULL STRETCH)
    ============================================================ */
 @media (max-width: 800px), (pointer: coarse) {
   #mobileControls { display: flex; }
@@ -251,20 +251,18 @@ canvas#game {
   #gameContainer {
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* Address bar hide hone par bhi full height lega */
+    height: 100dvh; 
     max-width: none;
     max-height: none;
-    aspect-ratio: auto; /* Aspect ratio ki limit hata di taaki screen bhar sake */
+    aspect-ratio: auto; /* Full stretch ke liye ratio hataya */
     border-radius: 0;
     box-shadow: none;
   }
 
-  /* Game stretch nahi hoga, balki height screen ke hisaab se badhegi */
   canvas#game {
     width: 100%;
     height: 100%;
-    object-fit: contain; 
-    /* Note: object-fit contain rakhne se background ke sath game fit hoga */
+    object-fit: fill; /* 100% screen bharne ke liye (youtube "zoom to fill" jaisa) */
   }
 }
 

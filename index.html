@@ -86,13 +86,13 @@
     } else if (elem.msRequestFullscreen) { /* IE11 */
       elem.msRequestFullscreen();
     }
-    // Screen orientation lock (landscape)
+    // Try to lock screen orientation to landscape
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(e => console.log('Orientation lock not supported'));
     }
   }
 
-  // Trigger fullscreen when user clicks the Begin Quest button
+  // Trigger fullscreen on click
   document.getElementById('tutStartBtn').addEventListener('click', goFullscreen);
 </script>
 
