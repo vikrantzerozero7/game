@@ -75,25 +75,27 @@
   </div>
 </div>
 
-<!-- FULLSCREEN SCRIPT -->
+<!-- FULLSCREEN & LANDSCAPE LOCK SCRIPT -->
 <script>
-  function enterFullscreen() {
+  function startGameFullscreen() {
     const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch(err => console.log(err));
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-      elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-      elem.msRequestFullscreen();
-    }
     
-    // Landscape lock (Optional)
+    // 1. Try Fullscreen
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => console.log('Fullscreen err:', err));
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+
+    // 2. Try to lock orientation to landscape
     if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(e => console.log('Orientation lock not supported'));
+      screen.orientation.lock('landscape').catch(err => {
+        console.log('Orientation lock not supported. User must rotate manually.');
+      });
     }
   }
 
-  document.getElementById('tutStartBtn').addEventListener('click', enterFullscreen);
+  document.getElementById('tutStartBtn').addEventListener('click', startGameFullscreen);
 </script>
 
 <script src="stages.js"></script>

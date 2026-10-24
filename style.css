@@ -8,8 +8,6 @@ html, body {
   touch-action: none;
   position: fixed;
   inset: 0;
-  margin: 0;
-  padding: 0;
 }
 body {
   font-family: 'Georgia', 'Times New Roman', serif;
@@ -20,25 +18,22 @@ body {
 }
 
 /* ============================================================
-   CONTAINER & CANVAS (FULL SCREEN MOBILE)
+   CONTAINER & CANVAS (FULL SCREEN LANDSCAPE)
    ============================================================ */
 #gameContainer {
   position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 1100px;
-  aspect-ratio: 16 / 9;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: #0a0603;
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 0 80px rgba(210, 130, 40, 0.25), 0 0 0 2px #3a2a15;
 }
 
 canvas#game {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* Screen ko poora cover karega, bina stretch ke. Sides me se thoda cut hoga, jo mobile landscape me normal hai */
   image-rendering: pixelated;
 }
 
@@ -48,12 +43,12 @@ canvas#game {
 #hud {
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 15px 8px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   pointer-events: none;
-  font-size: clamp(10px, 3.5vw, 14px);
+  font-size: clamp(12px, 2.5vw, 16px);
   letter-spacing: 1px;
   text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 2px 0 #000;
   z-index: 10;
@@ -61,7 +56,7 @@ canvas#game {
 .hud-group { 
   display: flex; 
   align-items: center; 
-  gap: 8px; 
+  gap: 10px; 
   flex-wrap: wrap;
 }
 .hearts { color: #ff4040; font-size: 1.2em; letter-spacing: 2px; filter: drop-shadow(0 0 6px #ff0000aa); }
@@ -87,89 +82,103 @@ canvas#game {
 .shield-indicator.broken { opacity: 1; color: #ff5555; border-color: #ff3030; box-shadow: 0 0 10px #ff3030aa; animation: pulse 0.4s infinite; }
 
 /* ============================================================
-   MOBILE CONTROLS
+   MOBILE CONTROLS (LANDSCAPE FIXED LAYOUT)
    ============================================================ */
 #mobileControls {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   display: none;
-  justify-content: space-between;
-  align-items: flex-end;
-  pointer-events: none;
-  z-index: 15;
-  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
 }
 
-.mobile-group {
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-  align-items: flex-end;
-  flex-wrap: nowrap;
-}
+@media (max-width: 900px), (pointer: coarse) {
+  #mobileControls {
+    display: block;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 15;
+  }
 
-.mobile-group:last-child {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  grid-template-rows: repeat(2, auto);
-  gap: 8px;
-  align-items: end;
-  justify-items: end;
-}
+  .mobile-group {
+    position: absolute;
+    bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    pointer-events: auto;
+    display: flex;
+    gap: 15px;
+  }
 
-.mobile-group:last-child .mbtn:nth-child(1) { grid-column: 1; grid-row: 2; } /* Shield */
-.mobile-group:last-child .mbtn:nth-child(2) { grid-column: 1; grid-row: 1; } /* Fly */
-.mobile-group:last-child .mbtn:nth-child(3) { grid-column: 2; grid-row: 1; } /* Up */
-.mobile-group:last-child .mbtn:nth-child(4) { grid-column: 2; grid-row: 2; } /* Down */
-.mobile-group:last-child .mbtn:nth-child(5) { grid-column: 3; grid-row: 1 / span 2; } /* Attack */
+  /* Left Side: Movement Buttons */
+  .mobile-group:first-child {
+    left: calc(20px + env(safe-area-inset-left, 0px));
+    align-items: flex-end;
+  }
 
-.mbtn {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  background: rgba(20, 14, 8, 0.85);
-  border: 2px solid #8b6f3a;
-  color: #ffd27f;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.7);
-  font-weight: bold;
-  touch-action: none;
-  transition: transform 0.08s, background 0.08s;
-}
+  /* Right Side: Action Buttons */
+  .mobile-group:last-child {
+    right: calc(20px + env(safe-area-inset-right, 0px));
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
 
-.mobile-group:last-child .mbtn:nth-child(5) {
-  height: 118px;
-  width: 55px;
-  border-radius: 27px;
-  border-color: #c8943a;
-  font-size: 20px;
-}
+  .mbtn {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: rgba(20, 14, 8, 0.8);
+    border: 2px solid #8b6f3a;
+    color: #ffd27f;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    font-weight: bold;
+    touch-action: none;
+    transition: transform 0.08s, background 0.08s;
+  }
 
-.mbtn:active {
-  transform: scale(0.9);
-  background: rgba(255, 200, 100, 0.35);
-}
+  .mbtn:active {
+    transform: scale(0.9);
+    background: rgba(255, 200, 100, 0.5);
+    border-color: #ffd27f;
+  }
 
-.mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 15px; }
-.mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 15px; }
-.mbtn.shield-btn.broken {
-  border-color: #ff3030; color: #ff5555;
-  box-shadow: 0 0 12px #ff3030aa;
-  animation: pulse 0.4s infinite;
+  .mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 20px; }
+  .mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 20px; }
+  .mbtn.shield-btn.broken {
+    border-color: #ff3030; color: #ff5555;
+    box-shadow: 0 0 12px #ff3030aa;
+    animation: pulse 0.4s infinite;
+  }
+
+  /* Attack Button - Thoda bada kiya (Right corner) */
+  .mobile-group:last-child .mbtn:nth-child(5) {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border-color: #c8943a;
+    font-size: 26px;
+    margin-left: 10px;
+    margin-bottom: -5px;
+  }
 }
 
 /* ============================================================
    FLASH & OVERLAYS
    ============================================================ */
-#damageFlash { position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%); opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s; }
-#shieldFlash { position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, #7fbfff 100%); opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.15s; }
-#shieldBreakFlash { position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, #ff3030 100%); opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.4s; }
+#damageFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s;
+}
+#shieldFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, #7fbfff 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.15s;
+}
+#shieldBreakFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, #ff3030 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.4s;
+}
 #worldBanner {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
   color: #ffd27f; font-size: clamp(28px, 6vw, 56px); font-weight: bold; letter-spacing: 6px;
@@ -233,47 +242,3 @@ canvas#game {
   box-shadow: 0 6px 0 #2a5a1a, 0 8px 20px rgba(0,0,0,0.6); transition: 0.1s;
 }
 .tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
-
-/* ============================================================
-   MOBILE FULL-SCREEN OVERRIDES (NO BLACK BARS)
-   ============================================================ */
-@media (max-width: 800px), (pointer: coarse) {
-  #mobileControls { display: flex; }
-  
-  #gameContainer {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh; /* Chrome URL bar hide hone par bhi full height */
-    max-width: none;
-    max-height: none;
-    aspect-ratio: auto; /* Kisi bhi tarah ki black bar hatane ke liye */
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  canvas#game {
-    width: 100%;
-    height: 100%;
-    object-fit: fill; /* Screen ko 100% stretch karega, koi black bar nahi */
-  }
-}
-
-/* Choti screen ke liye buttons */
-@media (max-width: 400px) {
-  .mbtn { width: 48px; height: 48px; font-size: 15px; }
-  .mobile-group:last-child .mbtn:nth-child(5) {
-    height: 104px; width: 48px; border-radius: 24px;
-  }
-  .mobile-group { gap: 6px; }
-  .mobile-group:last-child { gap: 6px; }
-}
-
-/* Landscape Mobile */
-@media (max-width: 900px) and (orientation: landscape) {
-  #hud { padding: 4px 10px; }
-  .world-name { display: none; }
-  .mbtn { width: 50px; height: 50px; }
-  .mobile-group:last-child .mbtn:nth-child(5) {
-    height: 106px; width: 50px; border-radius: 25px;
-  }
-}
