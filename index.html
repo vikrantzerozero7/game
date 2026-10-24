@@ -86,9 +86,9 @@
     } else if (elem.msRequestFullscreen) { /* IE11 */
       elem.msRequestFullscreen();
     }
-    // Try to lock screen orientation to landscape (optional, works on some devices)
+    // Screen orientation lock (landscape)
     if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(e => console.log(e));
+      screen.orientation.lock('landscape').catch(e => console.log('Orientation lock not supported'));
     }
   }
 

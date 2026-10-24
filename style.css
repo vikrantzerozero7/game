@@ -6,6 +6,8 @@ html, body {
   background: #000;
   overscroll-behavior: none;
   touch-action: none;
+  position: fixed;
+  inset: 0;
 }
 body {
   font-family: 'Georgia', 'Times New Roman', serif;
@@ -13,8 +15,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  position: fixed;
-  inset: 0;
 }
 
 /* ============================================================
@@ -24,20 +24,20 @@ body {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #000;
+  max-width: 1100px;
+  aspect-ratio: 16 / 9;
+  background: #0a0603;
+  border-radius: 12px;
   overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  box-shadow: 0 0 80px rgba(210, 130, 40, 0.25), 0 0 0 2px #3a2a15;
 }
 
-/* Canvas will fit inside without stretching */
 canvas#game {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain; 
   image-rendering: pixelated;
+  /* Mobile me auto-fit hoga, Desktop par normal */
 }
 
 /* ============================================================
@@ -107,7 +107,7 @@ canvas#game {
   flex-wrap: nowrap;
 }
 
-/* Right side buttons grid (Shield, Fly, Up, Down, Attack) */
+/* Right side buttons grid */
 .mobile-group:last-child {
   display: grid;
   grid-template-columns: repeat(3, auto);
@@ -243,7 +243,7 @@ canvas#game {
 .tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
 
 /* ============================================================
-   MOBILE FULL-SCREEN OVERRIDES
+   MOBILE FULL-SCREEN OVERRIDES (YOUTUBE STYLE)
    ============================================================ */
 @media (max-width: 800px), (pointer: coarse) {
   #mobileControls { display: flex; }
@@ -251,11 +251,20 @@ canvas#game {
   #gameContainer {
     width: 100vw;
     height: 100vh;
-    height: 100dvh; /* Fix for mobile browser address bar */
+    height: 100dvh; /* Address bar hide hone par bhi full height lega */
     max-width: none;
     max-height: none;
+    aspect-ratio: auto; /* Aspect ratio ki limit hata di taaki screen bhar sake */
     border-radius: 0;
     box-shadow: none;
+  }
+
+  /* Game stretch nahi hoga, balki height screen ke hisaab se badhegi */
+  canvas#game {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+    /* Note: object-fit contain rakhne se background ke sath game fit hoga */
   }
 }
 
