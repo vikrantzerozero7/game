@@ -75,6 +75,27 @@
   </div>
 </div>
 
+<!-- FULLSCREEN API SCRIPT -->
+<script>
+  function goFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => console.log(err));
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+      elem.msRequestFullscreen();
+    }
+    // Try to lock screen orientation to landscape (optional, works on some devices)
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(e => console.log(e));
+    }
+  }
+
+  // Trigger fullscreen when user clicks the Begin Quest button
+  document.getElementById('tutStartBtn').addEventListener('click', goFullscreen);
+</script>
+
 <script src="stages.js"></script>
 <script src="powers.js"></script>
 <script src="script.js"></script>
