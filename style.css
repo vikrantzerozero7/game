@@ -5,6 +5,9 @@ html, body {
   overflow: hidden;
   background: #000;
   overscroll-behavior: none;
+  position: fixed;
+  inset: 0;
+  touch-action: none;
 }
 body {
   font-family: 'Georgia', 'Times New Roman', serif;
@@ -12,13 +15,10 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  touch-action: none;
-  position: fixed;
-  inset: 0;
 }
 
 /* ============================================================
-   CONTAINER — desktop keeps rounded box, mobile goes fullscreen
+   CONTAINER & CANVAS
    ============================================================ */
 #gameContainer {
   position: relative;
@@ -36,56 +36,162 @@ canvas#game {
   display: block;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   image-rendering: pixelated;
 }
 
 /* ============================================================
-   HUD
+   HUD (TOP BAR)
    ============================================================ */
 #hud {
   position: absolute;
   top: 0; left: 0; right: 0;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) 18px 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   pointer-events: none;
-  font-size: clamp(11px, 1.5vw, 15px);
-  letter-spacing: 1.5px;
+  font-size: clamp(10px, 3.5vw, 14px);
+  letter-spacing: 1px;
   text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 2px 0 #000;
   z-index: 10;
 }
-.hud-group { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.hearts { color: #ff4040; font-size: 1.3em; letter-spacing: 3px; filter: drop-shadow(0 0 6px #ff0000aa); }
+.hud-group { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  flex-wrap: wrap;
+}
+.hearts { color: #ff4040; font-size: 1.2em; letter-spacing: 2px; filter: drop-shadow(0 0 6px #ff0000aa); }
 .timer { color: #ffd27f; }
 .timer.warn { color: #ff5555; animation: pulse 0.5s infinite; }
 @keyframes pulse { 50% { opacity: 0.4; } }
 .world-name {
-  color: #ffd27f; font-weight: bold; padding: 3px 12px;
-  background: rgba(0,0,0,0.5); border: 1px solid #8b6f3a; border-radius: 20px; font-size: 0.9em;
+  color: #ffd27f; font-weight: bold; padding: 2px 8px;
+  background: rgba(0,0,0,0.6); border: 1px solid #8b6f3a; border-radius: 12px; font-size: 0.9em;
 }
 .fly-indicator {
-  color: #7fd0ff; font-weight: bold; padding: 3px 10px;
-  background: rgba(0,0,0,0.5); border: 1px solid #2a6890; border-radius: 20px; font-size: 0.85em;
+  color: #7fd0ff; font-weight: bold; padding: 2px 8px;
+  background: rgba(0,0,0,0.6); border: 1px solid #2a6890; border-radius: 12px; font-size: 0.85em;
   opacity: 0.5; transition: opacity 0.2s;
 }
 .fly-indicator.active { opacity: 1; color: #a0e8ff; border-color: #7fd0ff; box-shadow: 0 0 10px #7fd0ffaa; }
 .shield-indicator {
-  color: #7fbfff; font-weight: bold; padding: 3px 10px;
-  background: rgba(0,0,0,0.5); border: 1px solid #2a5a90; border-radius: 20px; font-size: 0.85em;
+  color: #7fbfff; font-weight: bold; padding: 2px 8px;
+  background: rgba(0,0,0,0.6); border: 1px solid #2a5a90; border-radius: 12px; font-size: 0.85em;
   opacity: 0.5; transition: opacity 0.2s;
 }
 .shield-indicator.active { opacity: 1; color: #a0d8ff; border-color: #7fbfff; box-shadow: 0 0 10px #7fbfffaa; }
 .shield-indicator.broken { opacity: 1; color: #ff5555; border-color: #ff3030; box-shadow: 0 0 10px #ff3030aa; animation: pulse 0.4s infinite; }
 
 /* ============================================================
-   OVERLAYS
+   MOBILE CONTROLS (FIXED LAYOUT)
    ============================================================ */
+#mobileControls {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: none;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 15;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.mobile-group {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+/* Right side buttons grid */
+.mobile-group:last-child {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-rows: repeat(2, auto);
+  gap: 8px;
+  align-items: end;
+  justify-items: end;
+}
+
+/* Button positions */
+.mobile-group:last-child .mbtn:nth-child(1) { grid-column: 1; grid-row: 2; } /* Shield */
+.mobile-group:last-child .mbtn:nth-child(2) { grid-column: 1; grid-row: 1; } /* Fly */
+.mobile-group:last-child .mbtn:nth-child(3) { grid-column: 2; grid-row: 1; } /* Up */
+.mobile-group:last-child .mbtn:nth-child(4) { grid-column: 2; grid-row: 2; } /* Down */
+.mobile-group:last-child .mbtn:nth-child(5) { grid-column: 3; grid-row: 1 / span 2; } /* Attack (Tall) */
+
+.mbtn {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(20, 14, 8, 0.85);
+  border: 2px solid #8b6f3a;
+  color: #ffd27f;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.7);
+  font-weight: bold;
+  touch-action: none;
+  transition: transform 0.08s, background 0.08s;
+}
+
+.mobile-group:last-child .mbtn:nth-child(5) {
+  height: 118px;
+  width: 55px;
+  border-radius: 27px;
+  border-color: #c8943a;
+  font-size: 20px;
+}
+
+.mbtn:active {
+  transform: scale(0.9);
+  background: rgba(255, 200, 100, 0.35);
+}
+
+.mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 15px; }
+.mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 15px; }
+.mbtn.shield-btn.broken {
+  border-color: #ff3030; color: #ff5555;
+  box-shadow: 0 0 12px #ff3030aa;
+  animation: pulse 0.4s infinite;
+}
+
+/* ============================================================
+   FLASH & OVERLAYS
+   ============================================================ */
+#damageFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s;
+}
+#shieldFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, #7fbfff 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.15s;
+}
+#shieldBreakFlash {
+  position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, #ff3030 100%);
+  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.4s;
+}
+#worldBanner {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+  color: #ffd27f; font-size: clamp(28px, 6vw, 56px); font-weight: bold; letter-spacing: 6px;
+  text-shadow: 0 0 30px rgba(255,200,100,1), 0 4px 0 #3a2a15;
+  z-index: 25; pointer-events: none; transition: transform 0.4s, opacity 0.4s; opacity: 0; text-align: center;
+}
+#worldBanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
 .overlay {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   justify-content: center; align-items: center;
-  background: radial-gradient(circle, rgba(20,10,5,0.88), rgba(0,0,0,0.98));
-  z-index: 20; text-align: center; padding: 20px; backdrop-filter: blur(3px);
+  background: radial-gradient(circle, rgba(20,10,5,0.95), rgba(0,0,0,1));
+  z-index: 20; text-align: center; padding: 20px; backdrop-filter: blur(4px);
   overflow-y: auto;
 }
 .overlay.hidden { display: none; }
@@ -108,111 +214,6 @@ canvas#game {
 .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #5a4020, 0 10px 24px rgba(0,0,0,0.7); }
 .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #5a4020; }
 
-/* ============================================================
-   MOBILE CONTROLS — bottom strip, never overlaps play field
-   ============================================================ */
-#mobileControls {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
-  display: none;
-  justify-content: space-between;
-  align-items: flex-end;
-  pointer-events: none;
-  z-index: 15;
-  background: linear-gradient(to top, rgba(0,0,0,0.45), transparent);
-}
-
-.mobile-group {
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-  align-items: flex-end;
-  flex-wrap: nowrap;
-}
-
-/* Right action cluster — fixed 3x2 grid, never wraps */
-.mobile-group:last-child {
-  display: grid;
-  grid-template-columns: repeat(3, auto);
-  grid-template-rows: repeat(2, auto);
-  gap: 8px;
-  align-items: end;
-  justify-items: end;
-}
-
-.mobile-group:last-child .mbtn:nth-child(1) { grid-column: 1; grid-row: 2; } /* shield */
-.mobile-group:last-child .mbtn:nth-child(2) { grid-column: 1; grid-row: 1; } /* fly */
-.mobile-group:last-child .mbtn:nth-child(3) { grid-column: 2; grid-row: 1; } /* up */
-.mobile-group:last-child .mbtn:nth-child(4) { grid-column: 2; grid-row: 2; } /* down */
-.mobile-group:last-child .mbtn:nth-child(5) { grid-column: 3; grid-row: 1 / span 2; } /* attack */
-
-.mbtn {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: rgba(20, 14, 8, 0.85);
-  border: 2px solid #8b6f3a;
-  color: #ffd27f;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.7);
-  font-weight: bold;
-  touch-action: none;
-  transition: transform 0.08s, background 0.08s;
-}
-
-.mobile-group:last-child .mbtn:nth-child(5) {
-  height: 116px;
-  width: 54px;
-  border-radius: 27px;
-  border-color: #c8943a;
-  font-size: 20px;
-}
-
-.mbtn:active {
-  transform: scale(0.9);
-  background: rgba(255, 200, 100, 0.35);
-}
-
-.mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 15px; }
-.mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 15px; }
-.mbtn.shield-btn.broken {
-  border-color: #ff3030; color: #ff5555;
-  box-shadow: 0 0 12px #ff3030aa;
-  animation: pulse 0.4s infinite;
-}
-
-/* ============================================================
-   FLASH / BANNER
-   ============================================================ */
-#damageFlash {
-  position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%);
-  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s;
-}
-#shieldFlash {
-  position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, #7fbfff 100%);
-  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.15s;
-}
-#shieldBreakFlash {
-  position: absolute; inset: 0; background: radial-gradient(circle, transparent 20%, #ff3030 100%);
-  opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.4s;
-}
-#worldBanner {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
-  color: #ffd27f; font-size: clamp(28px, 6vw, 56px); font-weight: bold; letter-spacing: 6px;
-  text-shadow: 0 0 30px rgba(255,200,100,1), 0 4px 0 #3a2a15;
-  z-index: 25; pointer-events: none; transition: transform 0.4s, opacity 0.4s; opacity: 0; text-align: center;
-}
-#worldBanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-
-/* ============================================================
-   TUTORIAL SCREEN
-   ============================================================ */
 #tutorialScreen {
   position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column;
   justify-content: center; align-items: center; padding: 18px;
@@ -225,7 +226,7 @@ canvas#game {
   text-shadow: 0 0 20px rgba(255,200,100,0.7); margin-bottom: 10px;
 }
 .tut-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;
   max-width: 760px; width: 100%; margin-top: 14px;
 }
 .tut-item {
@@ -243,66 +244,39 @@ canvas#game {
 .tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
 
 /* ============================================================
-   MOBILE / COARSE POINTER — FULLSCREEN OVERRIDES
+   MOBILE FULL-SCREEN OVERRIDES
    ============================================================ */
-@media (max-width: 768px), (pointer: coarse) {
+@media (max-width: 800px), (pointer: coarse) {
   #mobileControls { display: flex; }
-
+  
   #gameContainer {
     width: 100vw;
     height: 100vh;
-    height: 100dvh;         /* dynamic viewport — accounts for browser bars */
-    max-width: none;
-    max-height: none;
-    aspect-ratio: auto;     /* kill the 16:9 letterbox */
-    border-radius: 0;       /* edge-to-edge */
+    height: 100dvh; /* Mobile browser address bar issue fix */
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto; /* Letterbox hatane ke liye */
+    border-radius: 0;
     box-shadow: none;
   }
-
-  /* Fill screen — canvas may stretch slightly, acceptable on mobile */
-  canvas#game {
-    width: 100%;
-    height: 100%;
-    object-fit: fill;
-  }
-
-  #hud {
-    padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
-    font-size: 12px;
-    gap: 8px;
-  }
-  .hud-group { gap: 8px; }
-
-  .mbtn { width: 52px; height: 52px; font-size: 17px; }
-  .mobile-group:last-child .mbtn:nth-child(5) {
-    height: 112px; width: 52px; border-radius: 26px;
-  }
-  #mobileControls {
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .overlay { padding: 14px; }
 }
 
-/* Very small phones */
-@media (max-width: 420px) {
-  .mbtn { width: 46px; height: 46px; font-size: 15px; }
-  .mobile-group:last-child .mbtn:nth-child(5) {
-    height: 100px; width: 46px; border-radius: 23px;
-  }
-  .mobile-group { gap: 6px; }
-  .mobile-group:last-child { gap: 6px; }
-  #hud { font-size: 11px; }
-  .world-name { padding: 2px 8px; font-size: 0.85em; }
-}
-
-/* Landscape phones — keep HUD/controls thin so play area is large */
-@media (max-width: 900px) and (orientation: landscape) {
+/* Choti screen ke liye buttons thode chhote */
+@media (max-width: 400px) {
   .mbtn { width: 48px; height: 48px; font-size: 15px; }
   .mobile-group:last-child .mbtn:nth-child(5) {
     height: 104px; width: 48px; border-radius: 24px;
   }
-  #mobileControls { padding: 6px 10px calc(6px + env(safe-area-inset-bottom, 0px)); }
-  #hud { padding: calc(4px + env(safe-area-inset-top, 0px)) 10px 4px; }
-  .world-name { display: none; }  /* save HUD space in landscape */
+  .mobile-group { gap: 6px; }
+  .mobile-group:last-child { gap: 6px; }
+}
+
+/* Landscape Mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+  #hud { padding: 4px 10px; }
+  .world-name { display: none; } /* Landscape mein space bachane ke liye */
+  .mbtn { width: 50px; height: 50px; }
+  .mobile-group:last-child .mbtn:nth-child(5) {
+    height: 106px; width: 50px; border-radius: 25px;
+  }
 }
