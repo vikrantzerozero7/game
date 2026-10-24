@@ -1,20 +1,16 @@
 // ============================================================
-// STAGES.JS — Levels, themes, generators, difficulty, loot,
-// story beats, achievements, chunks, run seeds, and more.
-// Max 3 enemies (archers + guards) per stage — hard cap.
+// STAGES.JS — Levels, themes, procedural generator, difficulty,
+// story beats, achievements, run seed.
 // ============================================================
 
-// ---------- GRID CONSTANTS ----------
 const TILE = 80;
 const W = 1280, H = 720;
 const COLS = W / TILE;
 const ROWS = H / TILE;
-
-// ---------- HARD CAP ----------
 const MAX_ENEMIES_PER_STAGE = 3;
 
 // ============================================================
-// THEMES — 10 worlds (5 original + 5 new)
+// THEMES — 10 worlds
 // ============================================================
 const THEMES = {
   sand: {
@@ -96,21 +92,8 @@ const WORLD_ORDER = [
 
 // ============================================================
 // STATIC LEVELS — 6 per world
-// Legend:
-//   .  empty      #  block       ^  spike
-//   D  door       E  exit        C  coin
-//   G  guard      A  archer
-//   ~  deadly pool     B  breakable    K  key
-//   L  locked exit     H  potion       P  fly orb
-//   Q  shield orb      $  gem          T  treasure
-//   M  moving spike    =  moving plat  F  falling plat
-//   R  boss            W  torch (deco) S  secret door
-// NOTE: Every base level kept at ≤3 total enemies (A + G).
 // ============================================================
 const LEVELS = {
-  // ----------------------------------------------------------
-  // SAND
-  // ----------------------------------------------------------
   sand: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
@@ -119,10 +102,6 @@ const LEVELS = {
     ["................","................","................","................","...D..C.C.C....E","####..^^^^..####","####........####","####..A.....####","####........####"],
     ["................","................","......C.C......E","................","...D............","####........####","####...A....####","####........####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // SNOW
-  // ----------------------------------------------------------
   snow: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
@@ -131,10 +110,6 @@ const LEVELS = {
     ["................","................","..C...C...C....E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
     ["................","................","................","................","...D.....A.....E","####..^^^^..####","####........####","####..G.....####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // WATER
-  // ----------------------------------------------------------
   water: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","...D............","#####...........","#####...........","#####.......A.E.","#####...........","#####......C...."],
@@ -143,10 +118,6 @@ const LEVELS = {
     ["................","................","...C..C..C.....E","................","...D............","#####...........","#####..####..###","#####..A.....###","#####........###"],
     ["................","................","................","................","...D....G......E","#####.........###","#####..A....#####","#####.......#####","#####.......#####"]
   ],
-
-  // ----------------------------------------------------------
-  // FOREST
-  // ----------------------------------------------------------
   forest: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
@@ -155,10 +126,6 @@ const LEVELS = {
     ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
     ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // LAVA
-  // ----------------------------------------------------------
   lava: [
     ["................","................","................","................","...D.C.C.C.C..E.","################","#####.A.########","################","################"],
     ["................","................","................","................","...D.C..C.C...E.","#####...........",".....####.^^.A..",".....####.......",".....####......."],
@@ -167,10 +134,6 @@ const LEVELS = {
     ["................","................","...C..C..C.....E","................","...D............","####........####","####..A.....####","####........####","####........####"],
     ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // DESERT NIGHT
-  // ----------------------------------------------------------
   desert_night: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
@@ -179,10 +142,6 @@ const LEVELS = {
     ["................","................","................","................","...D..A...A....E","####..^^^^..####","####........####","####..G.....####","####........####"],
     ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // ICE CAVE
-  // ----------------------------------------------------------
   ice_cave: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
@@ -191,10 +150,6 @@ const LEVELS = {
     ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"],
     ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // ANCIENT RUINS
-  // ----------------------------------------------------------
   ancient_ruins: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
@@ -203,10 +158,6 @@ const LEVELS = {
     ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
     ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // SHADOW REALM
-  // ----------------------------------------------------------
   shadow_realm: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
@@ -215,10 +166,6 @@ const LEVELS = {
     ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"],
     ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
   ],
-
-  // ----------------------------------------------------------
-  // SKY TEMPLE
-  // ----------------------------------------------------------
   sky_temple: [
     ["................","................","................","................","...D...C....C..E","################","################","################","################"],
     ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
@@ -241,45 +188,7 @@ function seededRandom(seed) {
 }
 
 // ============================================================
-// CHUNK LIBRARY — 8 cols × 9 rows prefabs
-// ============================================================
-const CHUNKS = {
-  flat_ground: [
-    "........","........","........","........","........",
-    "########","########","########","########"
-  ],
-  coin_arc: [
-    "........","..C..C..",".C....C.","C......C","........",
-    "########","########","########","########"
-  ],
-  spike_pit: [
-    "........","........","........","........","........",
-    "##^^^^##","########","########","########"
-  ],
-  tower: [
-    "....##..","....##..","....##..","....##..","....##..",
-    "##..##..","##..##..","##..##..","##..##.."
-  ],
-  archer_perch: [
-    "....A...","........","..####..","........","........",
-    "########","########","########","########"
-  ],
-  guard_patrol: [
-    "........","........","........","........","........",
-    "########","..G.....","########","########"
-  ],
-  floating_coins: [
-    "........","..C.C...",".C...C..","C.....C.","........",
-    "........","........","........","........"
-  ],
-  exit_chamber: [
-    "........","........","........","........","....E...",
-    "########","########","########","########"
-  ]
-};
-
-// ============================================================
-// DIFFICULTY TABLE — hard cap total ≤ 3 per stage
+// DIFFICULTY
 // ============================================================
 const DIFFICULTY = {
   1:  { archers: 0, guards: 0, time: 90, spikes: 0, coins: 3 },
@@ -299,81 +208,39 @@ function getDifficulty(stageNum) {
 }
 
 // ============================================================
-// LOOT TABLE
-// ============================================================
-const LOOT_TABLE = {
-  coin:      { symbol: 'C', points: 10, color: '#ffd27f', chance: 0.70 },
-  gem:       { symbol: '$', points: 50, color: '#ff40a0', chance: 0.15 },
-  potion:    { symbol: 'H', points: 0,  color: '#8aff70', chance: 0.08, heal: 1 },
-  flyOrb:    { symbol: 'P', points: 0,  color: '#7fd0ff', chance: 0.05, flyRefill: 100 },
-  shieldOrb: { symbol: 'Q', points: 0,  color: '#a0d8ff', chance: 0.02, shieldRefill: 100 }
-};
-
-function rollLoot(rng) {
-  let r = rng();
-  let acc = 0;
-  for (const key in LOOT_TABLE) {
-    acc += LOOT_TABLE[key].chance;
-    if (r <= acc) return key;
-  }
-  return 'coin';
-}
-
-// ============================================================
-// WORLD RULES
+// WORLD RULES — only what Player.update actually reads
 // ============================================================
 const WORLD_RULES = {
-  sand:          { hazard: null,        note: 'Standard gravity', gravityMod: 1.0 },
-  snow:          { hazard: 'ice',       note: 'Slippery ground', friction: 0.15 },
-  water:         { hazard: 'current',   note: 'Sideways currents', currentPush: 2 },
-  forest:        { hazard: 'vines',     note: 'Slow patches', vineSlow: 0.6 },
-  lava:          { hazard: 'eruption',  note: 'Lava geysers', geyserChance: 0.15 },
-  desert_night:  { hazard: 'sandstorm', note: 'Wind gusts', windGust: 3 },
-  ice_cave:      { hazard: 'slippery',  note: 'Very slippery', friction: 0.08 },
-  shadow_realm:  { hazard: 'darkness',  note: 'Vision reduced', visionRadius: 250 },
-  sky_temple:    { hazard: 'wind',      note: 'Upward wind', windUp: -1 },
-  ancient_ruins: { hazard: 'collapse',  note: 'Falling debris', debrisChance: 0.10 }
-};
-
-function getWorldRule(worldKey) {
-  return WORLD_RULES[worldKey] || WORLD_RULES.sand;
-}
-
-// ============================================================
-// TILE PROPERTIES
-// ============================================================
-const TILE_PROPS = {
-  EMPTY:            { solid: false, deadly: false, climbable: false },
-  BLOCK:            { solid: true,  deadly: false, climbable: false, breakable: false },
-  SPIKE:            { solid: false, deadly: true,  climbable: false, damage: 1 },
-  EXIT:             { solid: false, deadly: false, climbable: false, isGoal: true },
-  WATER:            { solid: false, deadly: true,  climbable: false, damage: 'instant' },
-  ICE:              { solid: true,  deadly: false, climbable: false, slippery: true },
-  VINE:             { solid: false, deadly: false, climbable: true },
-  BREAKABLE:        { solid: true,  deadly: false, climbable: false, breakable: true, hp: 2 },
-  MOVING_PLATFORM:  { solid: true,  deadly: false, climbable: false, moving: true },
-  FALLING_PLATFORM: { solid: true,  deadly: false, climbable: false, falling: true }
+  sand:          { hazard: null },
+  snow:          { hazard: 'ice',      friction: 0.15 },
+  water:         { hazard: 'current',  currentPush: 2 },
+  forest:        { hazard: null },
+  lava:          { hazard: null },
+  desert_night:  { hazard: 'sandstorm', windGust: 3 },
+  ice_cave:      { hazard: 'slippery', friction: 0.08 },
+  shadow_realm:  { hazard: 'darkness', visionRadius: 250 },
+  sky_temple:    { hazard: 'wind',     windUp: -1 },
+  ancient_ruins: { hazard: null }
 };
 
 // ============================================================
-// STORY BEATS
+// STORY BEATS — keyed by worldIndex (0-9)
 // ============================================================
 const STORY_BEATS = {
-  0:   { title: 'The Journey Begins',     subtitle: 'Escape the palace dungeons' },
-  5:   { title: 'Into the Frozen Wastes', subtitle: 'The cold bites deep...' },
-  10:  { title: 'The Water Trials',       subtitle: 'Currents test your resolve' },
-  15:  { title: 'Whispers of the Forest', subtitle: 'Ancient trees watch you' },
-  20:  { title: 'The Fiery Depths',       subtitle: 'Even flames cannot stop you' },
-  25:  { title: 'Beyond the Palace',      subtitle: 'New worlds await' },
-  30:  { title: 'Night of the Desert',    subtitle: 'Stars guide your blade' },
-  40:  { title: 'Frozen Heart',           subtitle: 'The ice cave remembers' },
-  50:  { title: 'The Prince Ascendant',   subtitle: 'You are legend' },
-  75:  { title: 'Shadows Within',         subtitle: 'The realm tests your soul' },
-  100: { title: 'INFINITE PRINCE',        subtitle: 'A hundred trials conquered' }
+  0: { title: 'The Journey Begins',     subtitle: 'Escape the palace dungeons' },
+  1: { title: 'Into the Frozen Wastes', subtitle: 'The cold bites deep...' },
+  2: { title: 'The Water Trials',       subtitle: 'Currents test your resolve' },
+  3: { title: 'Whispers of the Forest', subtitle: 'Ancient trees watch you' },
+  4: { title: 'The Fiery Depths',       subtitle: 'Even flames cannot stop you' },
+  5: { title: 'Night of the Desert',    subtitle: 'Stars guide your blade' },
+  6: { title: 'Frozen Heart',           subtitle: 'The ice cave remembers' },
+  7: { title: 'Ruins of Ages Past',     subtitle: 'The ancients stir' },
+  8: { title: 'Shadows Within',         subtitle: 'The realm tests your soul' },
+  9: { title: 'The Sky Temple',         subtitle: 'Ascend to legend' }
 };
 
-function getStoryBeat(stageNum) {
-  return STORY_BEATS[stageNum] || null;
+function getStoryBeat(worldIdx) {
+  return STORY_BEATS[worldIdx] || null;
 }
 
 // ============================================================
@@ -395,18 +262,8 @@ const ACHIEVEMENTS = {
 // ============================================================
 let runSeed = Date.now() % 100000;
 
-function getShareCode() {
-  return `POP-${runSeed.toString(36).toUpperCase()}`;
-}
-
-function loadFromShareCode(code) {
-  const parsed = parseInt(String(code).replace(/^POP-/i, ''), 36);
-  runSeed = isNaN(parsed) ? Date.now() % 100000 : parsed;
-  return runSeed;
-}
-
 // ============================================================
-// HELPERS — count tiles in a raw level
+// TILE COUNTING
 // ============================================================
 function countTiles(raw) {
   let archers = 0, guards = 0, coins = 0, spikes = 0;
@@ -422,7 +279,6 @@ function countTiles(raw) {
   return { archers, guards, coins, spikes };
 }
 
-// Trim enemies in a mutable 2D char array down to MAX_ENEMIES_PER_STAGE
 function trimEnemies(arr, rng) {
   const positions = [];
   for (let y = 0; y < ROWS; y++)
@@ -431,7 +287,6 @@ function trimEnemies(arr, rng) {
 
   if (positions.length <= MAX_ENEMIES_PER_STAGE) return;
 
-  // shuffle
   for (let i = positions.length - 1; i > 0; i--) {
     const j = Math.floor((rng ? rng() : Math.random()) * (i + 1));
     [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -444,7 +299,7 @@ function trimEnemies(arr, rng) {
 }
 
 // ============================================================
-// PROCEDURAL GENERATOR — respects MAX_ENEMIES_PER_STAGE
+// PROCEDURAL GENERATOR
 // ============================================================
 function generateProceduralLevel(worldKey, stageNum) {
   const rng = seededRandom(stageNum * 7919 + worldKey.length * 104729 + 12345 + runSeed);
@@ -456,15 +311,13 @@ function generateProceduralLevel(worldKey, stageNum) {
   const diff = getDifficulty(stageNum);
   const counts = countTiles(base);
 
-  // ---- Hard cap: trim base if it already exceeds MAX ----
   trimEnemies(out, rng);
 
-  // Recompute after trim
   const trimmed = countTiles(out.map(r => r.join('')));
   let archersNow = trimmed.archers;
   let guardsNow = trimmed.guards;
 
-  // ---- COINS ----
+  // coins
   const coinsToAdd = Math.max(0, diff.coins - counts.coins);
   for (let i = 0; i < coinsToAdd; i++) {
     for (let tries = 0; tries < 20; tries++) {
@@ -474,50 +327,53 @@ function generateProceduralLevel(worldKey, stageNum) {
     }
   }
 
-  // ---- ARCHERS (respect total cap) ----
+  // archers
   const archersToAdd = Math.max(0, diff.archers - archersNow);
   for (let a = 0; a < archersToAdd; a++) {
     if (archersNow + guardsNow >= MAX_ENEMIES_PER_STAGE) break;
     for (let tries = 0; tries < 20; tries++) {
       const ax = 2 + Math.floor(rng() * (COLS - 4));
       const ay = 1 + Math.floor(rng() * (ROWS - 2));
-      if (out[ay][ax] === '.') {
-        out[ay][ax] = 'A';
-        archersNow++;
-        break;
-      }
+      if (out[ay][ax] === '.') { out[ay][ax] = 'A'; archersNow++; break; }
     }
   }
 
-  // ---- GUARDS (respect total cap) ----
+  // guards
   const guardsToAdd = Math.max(0, diff.guards - guardsNow);
   for (let g = 0; g < guardsToAdd; g++) {
     if (archersNow + guardsNow >= MAX_ENEMIES_PER_STAGE) break;
     for (let tries = 0; tries < 20; tries++) {
       const gx = 2 + Math.floor(rng() * (COLS - 4));
       const gy = 1 + Math.floor(rng() * (ROWS - 2));
-      if (out[gy][gx] === '.') {
-        out[gy][gx] = 'G';
-        guardsNow++;
-        break;
-      }
+      if (out[gy][gx] === '.') { out[gy][gx] = 'G'; guardsNow++; break; }
     }
   }
 
-  // ---- Move exit slightly ----
+  // move exit to a reachable open spot on the ground
   let ex = -1, ey = -1;
-  for (let y = 0; y < ROWS; y++)
-    for (let x = 0; x < COLS; x++)
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
       if (out[y][x] === 'E') { ex = x; ey = y; break; }
+    }
+    if (ex >= 0) break;
+  }
   if (ex >= 0) {
     out[ey][ex] = '.';
-    const nx = Math.max(2, Math.min(COLS - 2, ex + Math.floor(rng() * 5) - 2));
-    let ny = ey;
-    if (rng() < 0.4 && ey > 1 && out[ey - 1][nx] === '.') ny = ey - 1;
-    out[ny][nx] = 'E';
+    const floorRow = ROWS - 2;
+    let placed = false;
+    for (let tries = 0; tries < 40 && !placed; tries++) {
+      const nx = 2 + Math.floor(rng() * (COLS - 4));
+      let ny = floorRow;
+      while (ny > 0 && out[ny][nx] === '#') ny--;
+      if (ny > 0 && (out[ny][nx] === '.' || out[ny][nx] === 'C')) {
+        out[ny][nx] = 'E';
+        placed = true;
+      }
+    }
+    if (!placed) out[ey][ex] = 'E';
   }
 
-  // ---- A few extra blocks ----
+  // extra blocks
   const pc = Math.floor(rng() * 2 + (stageNum > 3 ? 1 : 0));
   for (let p = 0; p < pc; p++) {
     const px = 1 + Math.floor(rng() * (COLS - 4));
@@ -527,7 +383,7 @@ function generateProceduralLevel(worldKey, stageNum) {
       if (px + i < COLS - 1 && out[py][px + i] === '.') out[py][px + i] = '#';
   }
 
-  // ---- SPIKES ----
+  // spikes
   const spikesToAdd = Math.max(0, diff.spikes - counts.spikes);
   for (let s = 0; s < spikesToAdd; s++) {
     const sx = 2 + Math.floor(rng() * (COLS - 6));
@@ -539,120 +395,3 @@ function generateProceduralLevel(worldKey, stageNum) {
 
   return out.map(r => r.join(''));
 }
-
-// ============================================================
-// CHUNK-BASED GENERATOR — respects MAX_ENEMIES_PER_STAGE
-// ============================================================
-function generateChunkLevel(worldKey, stageNum, chunkCount) {
-  const rng = seededRandom(stageNum * 1337 + worldKey.length * 999 + 42 + runSeed);
-  const safeChunks = Object.keys(CHUNKS).filter(k =>
-    k !== 'exit_chamber' && k !== 'archer_perch' && k !== 'guard_patrol'
-  );
-  const enemyChunks = ['archer_perch', 'guard_patrol'];
-  const count = chunkCount || (3 + Math.floor(rng() * 3));
-
-  const picked = ['flat_ground'];
-  let enemyPicked = 0;
-
-  for (let i = 1; i < count - 1; i++) {
-    if (enemyPicked < 2 && rng() < 0.35) {
-      picked.push(enemyChunks[Math.floor(rng() * enemyChunks.length)]);
-      enemyPicked++;
-    } else {
-      picked.push(safeChunks[Math.floor(rng() * safeChunks.length)]);
-    }
-  }
-  picked.push('exit_chamber');
-
-  const combined = [];
-  for (let y = 0; y < ROWS; y++) {
-    let row = '';
-    for (const p of picked) row += CHUNKS[p][y];
-    combined.push(row);
-  }
-
-  const arr = combined.map(r => r.split(''));
-  if (arr[4] && arr[4].length > 2) {
-    arr[4][2] = 'D';
-    for (let x = 0; x < 3; x++) if (arr[4][x] === 'E') arr[4][x] = '.';
-  }
-
-  // ---- HARD CAP ----
-  trimEnemies(arr, rng);
-
-  return arr.map(r => r.join(''));
-}
-
-// ============================================================
-// UNIFIED LEVEL PICKER
-// ============================================================
-function getLevelForStage(worldKey, stageNum, globalStage) {
-  if (typeof globalStage === 'undefined') globalStage = stageNum;
-
-  if (globalStage >= 30) {
-    return generateChunkLevel(worldKey, stageNum);
-  }
-  if (globalStage >= 12) {
-    return generateProceduralLevel(worldKey, stageNum);
-  }
-  const worldLevels = LEVELS[worldKey];
-  const baseIdx = stageNum % worldLevels.length;
-  return worldLevels[baseIdx];
-}
-
-// ============================================================
-// MINIMAP BUILDER
-// ============================================================
-function buildMinimap(raw) {
-  const map = [];
-  for (let y = 0; y < ROWS; y++) {
-    const row = [];
-    for (let x = 0; x < COLS; x++) {
-      const ch = raw[y] && raw[y][x] ? raw[y][x] : '.';
-      if (ch === '#') row.push(1);
-      else if (ch === '^') row.push(2);
-      else if (ch === 'E' || ch === 'L') row.push(3);
-      else if (ch === 'G' || ch === 'A') row.push(4);
-      else row.push(0);
-    }
-    map.push(row);
-  }
-  return map;
-}
-
-// ============================================================
-// VARIANTS
-// ============================================================
-const LEVEL_VARIANTS = {
-  easy:   { enemyHpMult: 0.5, timeMult: 1.3, coinMult: 1.0 },
-  normal: { enemyHpMult: 1.0, timeMult: 1.0, coinMult: 1.0 },
-  hard:   { enemyHpMult: 1.5, timeMult: 0.8, coinMult: 1.5 },
-  insane: { enemyHpMult: 2.5, timeMult: 0.6, coinMult: 2.0 }
-};
-
-function getVariant(stageNum) {
-  if (stageNum < 5)  return 'easy';
-  if (stageNum < 15) return 'normal';
-  if (stageNum < 30) return 'hard';
-  return 'insane';
-}
-
-// ============================================================
-// CAMERA HINTS
-// ============================================================
-const CAMERA_HINTS = {
-  sand:          { shakeOnLand: true,  zoomOnBoss: false },
-  snow:          { fogEffect: true },
-  water:         { underwaterTint: true },
-  forest:        { leafParticles: true },
-  lava:          { shakeOnLand: true, shakeOnLava: true, zoomOnBoss: true },
-  desert_night:  { vignetteStrong: true },
-  ice_cave:      { fogEffect: true, shakeOnLand: true },
-  ancient_ruins: { dustParticles: true },
-  shadow_realm:  { vignetteStrong: true, darknessPulse: true },
-  sky_temple:    { cloudParticles: true }
-};
-
-// ============================================================
-// END OF STAGES.JS
-// ============================================================

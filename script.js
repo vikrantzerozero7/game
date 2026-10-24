@@ -16,12 +16,9 @@ const ARCHER_SHOOT_INTERVAL = 2.2;
 const ARCHER_SHOOT_INTERVAL_FLYING = 1.2;
 const ARROW_LIFETIME = 4;
 
-const MAX_ENEMIES = 3;
-
 const PHYSICS = {
-  maxJumpDistance: MOVE_SPEED * Math.abs(2 * JUMP_FORCE / GRAVITY),
   jumpBuffer: 0.2,
-  coyoteTime: 0.15,
+  coyoteTime: 0.15
 };
 
 // ============================================================
@@ -113,7 +110,6 @@ let floatTexts = [];
 let doorCell = { x: 2, y: 4 };
 let exitCell = null;
 let exitLocked = false;
-let hasKey = false;
 let worldIndex = 0;
 let levelInWorld = 0;
 let currentWorld = 'sand';
@@ -244,7 +240,7 @@ class FloatText {
 // ARROW
 // ============================================================
 class Arrow {
-  constructor(x, y, tx, ty, homing = true) {
+  constructor(x, y, tx, ty) {
     this.x = x; this.y = y;
     this.life = ARROW_LIFETIME;
     const dx = tx - x, dy = ty - y;
@@ -252,11 +248,10 @@ class Arrow {
     this.vx = (dx / len) * ARROW_SPEED;
     this.vy = (dy / len) * ARROW_SPEED;
     this.angle = Math.atan2(this.vy, this.vx);
-    this.homing = homing;
   }
   update(dt, target) {
     this.life -= dt;
-    if (this.homing && target && target.flying) {
+    if (target && target.flying) {
       const tx = target.x + target.w / 2;
       const ty = target.y + target.h / 2;
       const dx = tx - this.x, dy = ty - this.y;
@@ -315,16 +310,10 @@ class Player {
     this.jumpBuffer = 0;
     this.coyoteTime = 0;
     this.dead = false;
-    this.isJumping = false;
-    this.jumpStartX = 0;
-    this.jumpStartY = 0;
-    this.jumpFrames = 0;
-    this.maxJumpDistThisJump = 0;
     this.flying = false;
     this.flyEnergy = FLY_MAX_ENERGY;
     this.flySoundTimer = 0;
     this.hurtCooldown = 0;
-    this.shieldRaiseAnim = 0;
     this.shieldPulse = 0;
     this.guardHitCooldown = 0;
   }
@@ -406,8 +395,6 @@ class Player {
     shieldActive = false;
     shieldEnergy = 0;
     shieldBreakTimer = SHIELD_BREAK_COOLDOWN;
-    shieldBreakFlashTimer = 0.6;
-    shieldBreakCooldownActive = true;
     audio.shieldBreak();
     shakeAmount = 18;
     spawnShieldBreak(this.x + this.w/2, this.y + this.h/2);
@@ -458,7 +445,6 @@ class Player {
     if (flyVy !== null) {
       this.vy = lerp(this.vy, flyVy, 0.25);
       this.onGround = false;
-      this.isJumping = false;
       stats.flyTime += dt;
     }
 
@@ -483,11 +469,6 @@ class Player {
       this.onGround = false;
       this.coyoteTime = 0;
       this.jumpBuffer = 0;
-      this.isJumping = true;
-      this.jumpStartX = this.x;
-      this.jumpStartY = this.y;
-      this.jumpFrames = 0;
-      this.maxJumpDistThisJump = 0;
       audio.jump();
       for (let i = 0; i < 8; i++) {
         particles.push(new Particle(
@@ -500,7 +481,7 @@ class Player {
 
     let friction = 0.35;
     if (currentWorldRule.hazard === 'ice' || currentWorldRule.hazard === 'slippery') {
-      friction = currentWorldRule.friction || 0.15;
+      friction = currentWorldRule.friction;
     }
     const targetVx = ax * MOVE_SPEED;
     if (this.onGround) this.vx = lerp(this.vx, targetVx, friction);
@@ -549,18 +530,11 @@ class Player {
         }
         this.vy = 0;
         this.onGround = true;
-        if (this.isJumping) this.isJumping = false;
       } else {
         const headTile = Math.floor(this.y / TILE);
         this.y = (headTile + 1) * TILE;
         this.vy = 0;
       }
-    }
-
-    if (this.isJumping) {
-      this.jumpFrames++;
-      const dist = Math.abs(this.x - this.jumpStartX);
-      if (dist > this.maxJumpDistThisJump) this.maxJumpDistThisJump = dist;
     }
 
     this.x = clamp(this.x, 0, W - this.w);
@@ -579,7 +553,7 @@ class Player {
     }
     if (this.onGround && Math.abs(this.vx) > 1) this.anim += dt * 12;
 
-    // Tile hazards (spike=2, deadly pool=4)
+    // tile hazards
     const cx1 = Math.floor((this.x + 10) / TILE);
     const cx2 = Math.floor((this.x + this.w - 10) / TILE);
     const cy1 = Math.floor((this.y + this.h - 6) / TILE);
@@ -616,6 +590,7 @@ class Player {
       }
     }
 
+    // coins
     for (let i = coins.length - 1; i >= 0; i--) {
       const c = coins[i];
       const cx = c.x * TILE + TILE/2;
@@ -631,6 +606,7 @@ class Player {
       }
     }
 
+    // pickups
     for (let i = pickups.length - 1; i >= 0; i--) {
       const p = pickups[i];
       const px = p.x * TILE + TILE/2;
@@ -642,10 +618,6 @@ class Player {
       }
     }
 
-    // ========================================================
-    // EXIT DETECTION — only when player rectangle overlaps
-    // the exit tile (i.e. actually touches it). No proximity.
-    // ========================================================
     if (exitCell && !exitLocked) {
       const exX = exitCell.x * TILE;
       const exY = exitCell.y * TILE;
@@ -657,7 +629,6 @@ class Player {
       }
     }
 
-    // HUD pills only — no debug text
     flyIndicator.classList.toggle('active', this.flying);
     flyIndicator.textContent = formatFlyText(this);
     shieldIndicator.textContent = formatShieldText();
@@ -675,8 +646,7 @@ class Player {
           return true;
         }
         const t = grid[ty][tx];
-        // EXIT (3) is walk-through — do NOT include it here.
-        if (t === 1 || t === 5 || t === 6 || t === 7) return true;
+        if (t === 1 || t === 5) return true;
       }
     }
     return false;
@@ -1065,7 +1035,7 @@ class Archer {
       predictX += target.vx * 8;
       predictY += target.vy * 8;
     }
-    arrows.push(new Arrow(myCx, myCy, predictX, predictY, true));
+    arrows.push(new Arrow(myCx, myCy, predictX, predictY));
     audio.bowShoot();
     spawnParticles(myCx + this.facing * 20, myCy, 5, '#ff8a40', 2, 0.4);
   }
@@ -1159,12 +1129,12 @@ class Archer {
 // PICKUP TYPES
 // ============================================================
 const PICKUP_TYPES = {
-  gem:       { char: '$', color: '#ff40a0', points: 50,  icon: '💎' },
-  potion:    { char: 'H', color: '#8aff70', heal: 1,     icon: '❤️' },
-  flyOrb:    { char: 'P', color: '#7fd0ff', flyRefill: 100, icon: '🕊️' },
-  shieldOrb: { char: 'Q', color: '#a0d8ff', shieldRefill: 100, icon: '🛡️' },
-  key:       { char: 'K', color: '#ffd27f', isKey: true, icon: '🔑' },
-  treasure:  { char: 'T', color: '#ffaa20', points: 100, icon: '💰' }
+  gem:       { color: '#ff40a0', icon: '💎' },
+  potion:    { color: '#8aff70', icon: '❤️' },
+  flyOrb:    { color: '#7fd0ff', icon: '🕊️' },
+  shieldOrb: { color: '#a0d8ff', icon: '🛡️' },
+  key:       { color: '#ffd27f', icon: '🔑' },
+  treasure:  { color: '#ffaa20', icon: '💰' }
 };
 
 function applyPickup(p, px, py) {
@@ -1186,12 +1156,11 @@ function applyPickup(p, px, py) {
     spawnParticles(px, py, 18, '#7fd0ff', 5, 0.9);
   } else if (p.type === 'shieldOrb') {
     shieldEnergy = SHIELD_MAX_ENERGY;
-    if (shieldBroken) { shieldBroken = false; shieldBreakTimer = 0; shieldBreakCooldownActive = false; }
+    if (shieldBroken) { shieldBroken = false; shieldBreakTimer = 0; }
     audio.powerup();
     floatTexts.push(new FloatText(px, py - 20, '🛡️ REFILL', '#a0d8ff', 24));
     spawnParticles(px, py, 18, '#a0d8ff', 5, 0.9);
   } else if (p.type === 'key') {
-    hasKey = true;
     exitLocked = false;
     audio.unlock();
     floatTexts.push(new FloatText(px, py - 20, '🔑 KEY!', '#ffd27f', 26));
@@ -1244,19 +1213,44 @@ class MovingSpike {
 }
 
 // ============================================================
+// BANNER + TIMERS
+// ============================================================
+let bannerTimeout = null;
+let beatTimeout = null;
+let transitionTimeout = null;
+
+function showBanner(text, color) {
+  if (bannerTimeout) clearTimeout(bannerTimeout);
+  worldBanner.textContent = text;
+  worldBanner.style.color = color || '#ffd27f';
+  worldBanner.classList.add('show');
+  bannerTimeout = setTimeout(() => {
+    worldBanner.classList.remove('show');
+    bannerTimeout = null;
+  }, 1800);
+}
+
+function cancelPendingTimers() {
+  if (bannerTimeout) { clearTimeout(bannerTimeout); bannerTimeout = null; }
+  if (beatTimeout) { clearTimeout(beatTimeout); beatTimeout = null; }
+  if (transitionTimeout) { clearTimeout(transitionTimeout); transitionTimeout = null; }
+  worldBanner.classList.remove('show');
+}
+
+// ============================================================
 // LEVEL LOADING
 // ============================================================
 function loadLevel(worldKey, levelIdx, useProcedural = false) {
   currentWorld = worldKey;
   currentTheme = THEMES[worldKey] || THEMES.sand;
-  currentWorldRule = getWorldRule(worldKey);
+  currentWorldRule = WORLD_RULES[worldKey] || WORLD_RULES.sand;
   levelInWorld = levelIdx;
   worldIndex = WORLD_ORDER.indexOf(worldKey);
 
+  if (beatTimeout) { clearTimeout(beatTimeout); beatTimeout = null; }
+
   let raw;
-  if (typeof getLevelForStage === 'function' && !useProcedural) {
-    raw = getLevelForStage(worldKey, levelIdx, globalStage);
-  } else if (useProcedural && typeof generateProceduralLevel === 'function') {
+  if (useProcedural) {
     raw = generateProceduralLevel(worldKey, globalStage);
   } else {
     raw = LEVELS[worldKey][levelIdx];
@@ -1274,9 +1268,8 @@ function loadLevel(worldKey, levelIdx, useProcedural = false) {
   floatTexts = [];
   exitCell = null;
   exitLocked = false;
-  hasKey = false;
 
-  const diff = (typeof getDifficulty === 'function') ? getDifficulty(globalStage) : { time: 90 };
+  const diff = getDifficulty(globalStage);
 
   for (let y = 0; y < ROWS; y++) {
     const row = [];
@@ -1301,11 +1294,7 @@ function loadLevel(worldKey, levelIdx, useProcedural = false) {
         case 'T': cell = 0; pickups.push({ x, y, type: 'treasure' }); break;
         case 'L': cell = 3; exitCell = { x, y }; exitLocked = true; break;
         case 'M': cell = 0; movingSpikes.push(new MovingSpike(x, y)); break;
-        case '=': cell = 6; break;
-        case 'F': cell = 7; break;
         case 'R': cell = 0; guards.push(new Guard(x, y, true)); break;
-        case 'W': cell = 0; break;
-        case 'S': cell = 0; break;
         default:  cell = 0;
       }
       row.push(cell);
@@ -1313,15 +1302,13 @@ function loadLevel(worldKey, levelIdx, useProcedural = false) {
     grid.push(row);
   }
 
+  // enemy cap
   const totalEnemies = guards.length + archers.length;
-  if (totalEnemies > MAX_ENEMIES) {
-    let toRemove = totalEnemies - MAX_ENEMIES;
+  if (totalEnemies > MAX_ENEMIES_PER_STAGE) {
+    let toRemove = totalEnemies - MAX_ENEMIES_PER_STAGE;
     while (toRemove > 0 && (guards.length > 0 || archers.length > 0)) {
-      if (guards.length >= archers.length && guards.length > 0) {
-        guards.pop();
-      } else if (archers.length > 0) {
-        archers.pop();
-      }
+      if (guards.length >= archers.length && guards.length > 0) guards.pop();
+      else if (archers.length > 0) archers.pop();
       toRemove--;
     }
   }
@@ -1334,14 +1321,19 @@ function loadLevel(worldKey, levelIdx, useProcedural = false) {
   stats.damageTaken = 0;
   updateHUD();
 
-  if (typeof getStoryBeat === 'function') {
-    const beat = getStoryBeat(globalStage);
+  if (levelInWorld === 0) {
+    const beat = getStoryBeat(worldIndex);
     if (beat) {
-      setTimeout(() => showBanner(beat.title + ' — ' + beat.subtitle, '#ffd27f'), 300);
+      beatTimeout = setTimeout(() => {
+        if (gameState === 'playing') {
+          showBanner(beat.title + ' — ' + beat.subtitle, '#ffd27f');
+        }
+        beatTimeout = null;
+      }, 300);
     }
   }
 
-  console.log(`[Stage ${globalStage}] ${archers.length}A + ${guards.length}G = ${archers.length + guards.length} enemies (max ${MAX_ENEMIES})`);
+  console.log(`[Stage ${globalStage}] world=${worldKey} level=${levelIdx} | ${archers.length}A + ${guards.length}G = ${archers.length + guards.length} enemies`);
 }
 
 function updateHUD() {
@@ -1352,23 +1344,15 @@ function updateHUD() {
   scoreEl.textContent = score;
 }
 
-function showBanner(text, color) {
-  worldBanner.textContent = text;
-  worldBanner.style.color = color || '#ffd27f';
-  worldBanner.classList.add('show');
-  setTimeout(() => worldBanner.classList.remove('show'), 1400);
-}
-
 // ============================================================
 // ACHIEVEMENTS
 // ============================================================
 function checkAchievements() {
-  if (typeof ACHIEVEMENTS !== 'object') return;
   stats.stage = globalStage;
   for (const key in ACHIEVEMENTS) {
     if (unlockedAchievements.has(key)) continue;
     const ach = ACHIEVEMENTS[key];
-    if (ach && typeof ach.check === 'function' && ach.check(stats)) {
+    if (ach.check(stats)) {
       unlockedAchievements.add(key);
       audio.achievement();
       floatTexts.push(new FloatText(W/2, H/2 - 80, '🏆 ' + ach.name, '#ffd27f', 30));
@@ -1382,6 +1366,8 @@ function checkAchievements() {
 // ============================================================
 function winLevel() {
   if (gameState !== 'playing') return;
+  if (transitionTimeout) { clearTimeout(transitionTimeout); transitionTimeout = null; }
+
   gameState = 'won';
   audio.win();
   shakeAmount = 10;
@@ -1394,28 +1380,32 @@ function winLevel() {
   const isLastLevelOfWorld = levelInWorld >= worldLevels.length - 1;
 
   if (!isLastLevelOfWorld) {
+    const nextIdx = levelInWorld + 1;
+    const nextWorld = currentWorld;
+    const useProc = globalStage >= 12;
     showBanner('LEVEL COMPLETE!', '#8aff70');
-    setTimeout(() => {
-      const nextIdx = levelInWorld + 1;
-      const useProc = globalStage >= 12;
-      loadLevel(currentWorld, nextIdx, useProc);
+    transitionTimeout = setTimeout(() => {
+      transitionTimeout = null;
+      loadLevel(nextWorld, nextIdx, useProc);
       gameState = 'playing';
     }, 1200);
   } else {
     const nextWorldIdx = worldIndex + 1;
     if (nextWorldIdx < WORLD_ORDER.length) {
-      showBanner(currentTheme.name + ' COMPLETE!', '#ffd27f');
-      setTimeout(() => {
-        loadLevel(WORLD_ORDER[nextWorldIdx], 0, true);
+      const nextWorld = WORLD_ORDER[nextWorldIdx];
+      transitionTimeout = setTimeout(() => {
+        transitionTimeout = null;
+        loadLevel(nextWorld, 0, true);
         gameState = 'playing';
-      }, 1500);
+      }, 800);
     } else {
       loopCount++;
       showBanner('🔥 WORLD LOOP ' + loopCount + ' — MORE CHALLENGE!', '#ff8a40');
-      setTimeout(() => {
+      transitionTimeout = setTimeout(() => {
+        transitionTimeout = null;
         loadLevel(WORLD_ORDER[0], 0, true);
         gameState = 'playing';
-      }, 2000);
+      }, 1600);
     }
   }
 }
@@ -1977,6 +1967,7 @@ function resetStats() {
 }
 
 function startGame() {
+  cancelPendingTimers();
   audio.init();
   lives = 3;
   score = 0;
@@ -1984,8 +1975,8 @@ function startGame() {
   loopCount = 0;
   scoreEl.textContent = 0;
   resetStats();
-  loadLevel(WORLD_ORDER[0], 0, false);
   gameState = 'playing';
+  loadLevel(WORLD_ORDER[0], 0, false);
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('victoryScreen').classList.add('hidden');
   document.getElementById('tutorialScreen').classList.add('hidden');
@@ -1994,14 +1985,15 @@ function startGame() {
 
 function restartGame() {
   if (gameState === 'menu') return;
+  cancelPendingTimers();
   lives = 3;
   score = 0;
   globalStage = 0;
   loopCount = 0;
   scoreEl.textContent = 0;
   resetStats();
-  loadLevel(WORLD_ORDER[0], 0, false);
   gameState = 'playing';
+  loadLevel(WORLD_ORDER[0], 0, false);
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('victoryScreen').classList.add('hidden');
   document.getElementById('tutorialScreen').classList.add('hidden');

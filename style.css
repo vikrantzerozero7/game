@@ -61,23 +61,116 @@ canvas#game { display: block; width: 100%; height: 100%; image-rendering: pixela
 }
 .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #5a4020, 0 10px 24px rgba(0,0,0,0.7); }
 .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #5a4020; }
+
+/* ============================================================
+   MOBILE CONTROLS — fixed layout, no overlap with game
+   ============================================================ */
 #mobileControls {
-  position: absolute; bottom: 0; left: 0; right: 0; padding: 14px 18px;
-  display: none; justify-content: space-between; pointer-events: none; z-index: 15;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: none;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 15;
+  background: linear-gradient(to top, rgba(0,0,0,0.45), transparent);
 }
-.mobile-group { display: flex; gap: 10px; pointer-events: auto; flex-wrap: wrap; }
+
+.mobile-group {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+/* Right-side action cluster: fixed 3x2 grid — never wraps into play field */
+.mobile-group:last-child {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-rows: repeat(2, auto);
+  gap: 8px;
+  align-items: end;
+  justify-items: end;
+}
+
+/* Grid slot mapping */
+.mobile-group:last-child .mbtn:nth-child(1) { grid-column: 1; grid-row: 2; } /* shield */
+.mobile-group:last-child .mbtn:nth-child(2) { grid-column: 1; grid-row: 1; } /* fly */
+.mobile-group:last-child .mbtn:nth-child(3) { grid-column: 2; grid-row: 1; } /* up */
+.mobile-group:last-child .mbtn:nth-child(4) { grid-column: 2; grid-row: 2; } /* down */
+.mobile-group:last-child .mbtn:nth-child(5) { grid-column: 3; grid-row: 1 / span 2; } /* attack tall */
+
 .mbtn {
-  width: 58px; height: 58px; border-radius: 50%; background: rgba(30,20,10,0.8);
-  border: 2px solid #8b6f3a; color: #ffd27f; font-size: 20px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0,0,0,0.6); font-weight: bold;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(20, 14, 8, 0.85);
+  border: 2px solid #8b6f3a;
+  color: #ffd27f;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.7);
+  font-weight: bold;
   touch-action: none;
+  transition: transform 0.08s, background 0.08s;
 }
-.mbtn:active { transform: scale(0.92); background: rgba(255,200,100,0.3); }
-.mbtn.fly-btn { border-color: #2a6890; color: #a0e8ff; font-size: 16px; }
-.mbtn.shield-btn { border-color: #2a5a90; color: #a0d8ff; font-size: 16px; }
-.mbtn.shield-btn.broken { border-color: #ff3030; color: #ff5555; box-shadow: 0 0 12px #ff3030aa; animation: pulse 0.4s infinite; }
-@media (max-width: 768px), (pointer: coarse) { #mobileControls { display: flex; } }
+
+/* Attack button is taller so it reads as the main action */
+.mobile-group:last-child .mbtn:nth-child(5) {
+  height: 116px;
+  width: 54px;
+  border-radius: 27px;
+  border-color: #c8943a;
+  color: #ffd27f;
+  font-size: 20px;
+}
+
+.mbtn:active {
+  transform: scale(0.9);
+  background: rgba(255, 200, 100, 0.35);
+}
+
+.mbtn.fly-btn {
+  border-color: #2a6890;
+  color: #a0e8ff;
+  font-size: 15px;
+}
+
+.mbtn.shield-btn {
+  border-color: #2a5a90;
+  color: #a0d8ff;
+  font-size: 15px;
+}
+
+.mbtn.shield-btn.broken {
+  border-color: #ff3030;
+  color: #ff5555;
+  box-shadow: 0 0 12px #ff3030aa;
+  animation: pulse 0.4s infinite;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  #mobileControls { display: flex; }
+}
+
+@media (max-width: 500px) {
+  .mbtn { width: 46px; height: 46px; font-size: 15px; }
+  .mobile-group:last-child .mbtn:nth-child(5) { height: 100px; width: 46px; border-radius: 23px; }
+  #mobileControls { padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .mobile-group { gap: 6px; }
+  .mobile-group:last-child { gap: 6px; }
+  #hud { padding: 6px 10px; }
+}
+
+/* ============================================================
+   FLASH / BANNER OVERLAYS
+   ============================================================ */
 #damageFlash {
   position: absolute; inset: 0; background: radial-gradient(circle, transparent 30%, #ff0000 100%);
   opacity: 0; pointer-events: none; z-index: 18; transition: opacity 0.3s;
@@ -97,6 +190,10 @@ canvas#game { display: block; width: 100%; height: 100%; image-rendering: pixela
   z-index: 25; pointer-events: none; transition: transform 0.4s, opacity 0.4s; opacity: 0; text-align: center;
 }
 #worldBanner.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+/* ============================================================
+   TUTORIAL SCREEN
+   ============================================================ */
 #tutorialScreen {
   position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column;
   justify-content: center; align-items: center; padding: 18px;
@@ -125,8 +222,3 @@ canvas#game { display: block; width: 100%; height: 100%; image-rendering: pixela
   box-shadow: 0 6px 0 #2a5a1a, 0 8px 20px rgba(0,0,0,0.6); transition: 0.1s;
 }
 .tut-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2a5a1a; }
-@media (max-width: 500px) {
-  .mbtn { width: 48px; height: 48px; font-size: 16px; }
-  #mobileControls { padding: 10px 12px; }
-  #hud { padding: 6px 10px; }
-}
