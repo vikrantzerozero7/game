@@ -1,7 +1,4 @@
-echo "# game" >> README.md
-git init
+@echo off
 git add .
-git commit -m "first commit"
-git branch -M main
-git remote add origin https://github.com/vikrantzerozero7/game.git
-git push -u origin main
+git commit -m "update"
+git push origin main
