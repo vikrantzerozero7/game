@@ -1,0 +1,417 @@
+// ============================================================
+// STAGES.JS — Levels, themes, procedural generator, difficulty,
+// story beats, achievements, run seed.
+// ============================================================
+
+const TILE = 80;
+const W = 1280, H = 720;
+const COLS = W / TILE;
+const ROWS = H / TILE;
+const MAX_ENEMIES_PER_STAGE = 3;
+
+// ============================================================
+// THEMES — 10 worlds
+// ============================================================
+const THEMES = {
+  sand: {
+    name: '🏜️ Sand',
+    bgTop: '#3a1e08', bgMid: '#5a3010', bgBottom: '#1a0a03',
+    blockTop: '#c8943a', blockMid: '#8b6f3a', blockBottom: '#3a2a15',
+    accent: '#ffd27f', particle: '#c8943a', bgShape: 'dunes',
+    detail1: '#6a3a10', detail2: '#4a2a0a', detail3: '#2a1a08', star: '#ffd27f'
+  },
+  snow: {
+    name: '❄️ Snow',
+    bgTop: '#1a2a3a', bgMid: '#3a5068', bgBottom: '#0a1420',
+    blockTop: '#e8f0f8', blockMid: '#8aa8c0', blockBottom: '#3a5068',
+    accent: '#b0e0ff', particle: '#ffffff', bgShape: 'mountains',
+    detail1: '#2a4a6a', detail2: '#e8f0f8', detail3: '#1a2a3a', star: '#ffffff'
+  },
+  water: {
+    name: '💧 Water',
+    bgTop: '#0a1a2a', bgMid: '#1a3a5a', bgBottom: '#02080f',
+    blockTop: '#4aa0c8', blockMid: '#2a6890', blockBottom: '#0a2035',
+    accent: '#7fd0ff', particle: '#a0e8ff', bgShape: 'waves',
+    detail1: '#1a4a6a', detail2: '#3a7aa8', detail3: '#0a2035', star: '#a0e8ff'
+  },
+  forest: {
+    name: '🌲 Forest',
+    bgTop: '#0a2008', bgMid: '#1a4010', bgBottom: '#020a02',
+    blockTop: '#4a8a3a', blockMid: '#2a5a20', blockBottom: '#0a2008',
+    accent: '#8aff70', particle: '#4a8a3a', bgShape: 'trees',
+    detail1: '#1a3a10', detail2: '#2a5a20', detail3: '#0a2008', star: '#ffd27f'
+  },
+  lava: {
+    name: '🔥 Lava',
+    bgTop: '#2a0a0a', bgMid: '#5a1a0a', bgBottom: '#0a0202',
+    blockTop: '#8a3a1a', blockMid: '#5a2010', blockBottom: '#1a0603',
+    accent: '#ff8a40', particle: '#ff5a20', bgShape: 'lava',
+    detail1: '#6a2a10', detail2: '#ff4a10', detail3: '#2a0a0a', star: '#ff8a40'
+  },
+  desert_night: {
+    name: '🌙 Desert Night',
+    bgTop: '#0a0a2a', bgMid: '#1a1a4a', bgBottom: '#000008',
+    blockTop: '#6a5a8a', blockMid: '#3a2a5a', blockBottom: '#1a0a2a',
+    accent: '#a0c0ff', particle: '#c0d0ff', bgShape: 'dunes',
+    detail1: '#2a1a4a', detail2: '#4a3a6a', detail3: '#1a0a2a', star: '#ffffff'
+  },
+  ice_cave: {
+    name: '🧊 Ice Cave',
+    bgTop: '#0a2a3a', bgMid: '#1a4a6a', bgBottom: '#020a12',
+    blockTop: '#c0f0ff', blockMid: '#80c0e0', blockBottom: '#2a5a7a',
+    accent: '#a0f0ff', particle: '#e0ffff', bgShape: 'mountains',
+    detail1: '#2a5a7a', detail2: '#a0e0ff', detail3: '#0a2a3a', star: '#e0ffff'
+  },
+  ancient_ruins: {
+    name: '🏛️ Ancient Ruins',
+    bgTop: '#2a1a0a', bgMid: '#4a3a1a', bgBottom: '#0a0502',
+    blockTop: '#d0b080', blockMid: '#8a6a3a', blockBottom: '#3a2a10',
+    accent: '#ffd27f', particle: '#c0a060', bgShape: 'dunes',
+    detail1: '#5a4a2a', detail2: '#8a6a3a', detail3: '#2a1a08', star: '#ffd27f'
+  },
+  shadow_realm: {
+    name: '🌑 Shadow Realm',
+    bgTop: '#1a0010', bgMid: '#3a0020', bgBottom: '#050002',
+    blockTop: '#6a1a4a', blockMid: '#4a0a2a', blockBottom: '#1a0010',
+    accent: '#ff40a0', particle: '#a0206a', bgShape: 'lava',
+    detail1: '#4a0a2a', detail2: '#ff2060', detail3: '#1a0010', star: '#ff80c0'
+  },
+  sky_temple: {
+    name: '☁️ Sky Temple',
+    bgTop: '#4a6aaa', bgMid: '#8ab0e0', bgBottom: '#2a4a8a',
+    blockTop: '#ffffff', blockMid: '#d0e0f0', blockBottom: '#8ab0e0',
+    accent: '#ffffff', particle: '#ffffff', bgShape: 'mountains',
+    detail1: '#6a8ac0', detail2: '#ffffff', detail3: '#4a6aaa', star: '#ffffff'
+  }
+};
+
+const WORLD_ORDER = [
+  'sand', 'snow', 'water', 'forest', 'lava',
+  'desert_night', 'ice_cave', 'ancient_ruins', 'shadow_realm', 'sky_temple'
+];
+
+// ============================================================
+// STATIC LEVELS — 6 per world
+// ============================================================
+const LEVELS = {
+  sand: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
+    ["................","................","................","................","...D...C....C..E","################","#######.G.######","################","################"],
+    ["................","................","................","...D............","...D.C.C....A..E","#####......#####","#####..G...#####","#####......#####","#####......#####"],
+    ["................","................","................","................","...D..C.C.C....E","####..^^^^..####","####........####","####..A.....####","####........####"],
+    ["................","................","......C.C......E","................","...D............","####........####","####...A....####","####........####","####........####"]
+  ],
+  snow: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
+    ["................","................","................","................","...D.C.C...C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D..C...C....E","####^^^^^^^^####","####........####","####..G.....####","####........####"],
+    ["................","................","..C...C...C....E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D.....A.....E","####..^^^^..####","####........####","####..G.....####","####........####"]
+  ],
+  water: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","...D............","#####...........","#####...........","#####.......A.E.","#####...........","#####......C...."],
+    ["................","................","................","................","...D...C........","#####...........",".....####.....E.",".....####.G.....",".....####..A...."],
+    ["................","................","................","................","...D.C.C.C.....E","#####..^^^^..####","#####.......####","#####..A....####","#####.......####"],
+    ["................","................","...C..C..C.....E","................","...D............","#####...........","#####..####..###","#####..A.....###","#####........###"],
+    ["................","................","................","................","...D....G......E","#####.........###","#####..A....#####","#####.......#####","#####.......#####"]
+  ],
+  forest: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D.C.C.C.C...E","####.G......####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D..C.C.C....E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
+  ],
+  lava: [
+    ["................","................","................","................","...D.C.C.C.C..E.","################","#####.A.########","################","################"],
+    ["................","................","................","................","...D.C..C.C...E.","#####...........",".....####.^^.A..",".....####.......",".....####......."],
+    ["................","................","................","................","...D.C..C.C...E.","#####...........",".....####.G.....",".....####..A....",".....####......."],
+    ["................","................","................","................","...D..C.C.C...E.","####..^^^^..####","####..A.....####","####..G.....####","####........####"],
+    ["................","................","...C..C..C.....E","................","...D............","####........####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
+  ],
+  desert_night: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D...C........","######..........","......####..A.E.","......####......","......####......"],
+    ["................","................","................","................","...D.C..C..C...E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","..C...C...C....E","................","...D............","####..####..####","####..A.....####","####..G.....####","####........####"],
+    ["................","................","................","................","...D..A...A....E","####..^^^^..####","####........####","####..G.....####","####........####"],
+    ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
+  ],
+  ice_cave: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D..C.C.C....E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"],
+    ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
+  ],
+  ancient_ruins: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D.C..C..C...E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","................","................","...D.C.C.C.C...E","####.G......####","####...A....####","####........####","####........####"],
+    ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
+  ],
+  shadow_realm: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D..C.C.C....E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D..G..A.....E","####..^^^^..####","####........####","####..A.....####","####........####"],
+    ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####........####","####........####"]
+  ],
+  sky_temple: [
+    ["................","................","................","................","...D...C....C..E","################","################","################","################"],
+    ["................","................","................","................","...D.C.C.C.C...E","####........####","####...A....####","####........####","####........####"],
+    ["................","................","................","................","...D.C..C..C...E","####..^^^^..####","####..G.....####","####..A.....####","####........####"],
+    ["................","................","................","................","...D.C.C.C.C...E","####.G......####","####...A....####","####........####","####........####"],
+    ["................","................","..C..C..C..C...E","................","...D............","####..####..####","####..A.....####","####........####","####........####"],
+    ["................","................","................","................","...D.G...A.....E","####..^^^^..####","####........####","####..A.....####","####........####"]
+  ]
+};
+
+// ============================================================
+// SEEDED RNG
+// ============================================================
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+// ============================================================
+// DIFFICULTY
+// ============================================================
+const DIFFICULTY = {
+  1:  { archers: 0, guards: 0, time: 90, spikes: 0, coins: 3 },
+  2:  { archers: 0, guards: 0, time: 85, spikes: 1, coins: 4 },
+  3:  { archers: 1, guards: 0, time: 80, spikes: 1, coins: 5 },
+  4:  { archers: 1, guards: 1, time: 75, spikes: 2, coins: 6 },
+  5:  { archers: 1, guards: 1, time: 70, spikes: 2, coins: 7 },
+  6:  { archers: 2, guards: 1, time: 65, spikes: 3, coins: 8 },
+  7:  { archers: 2, guards: 1, time: 60, spikes: 3, coins: 9 },
+  8:  { archers: 2, guards: 1, time: 55, spikes: 4, coins: 10 },
+  9:  { archers: 2, guards: 1, time: 50, spikes: 4, coins: 12 },
+  10: { archers: 2, guards: 1, time: 45, spikes: 5, coins: 15 }
+};
+
+function getDifficulty(stageNum) {
+  return DIFFICULTY[Math.min(stageNum + 1, 10)];
+}
+
+// ============================================================
+// WORLD RULES
+// ============================================================
+const WORLD_RULES = {
+  sand:          { hazard: null },
+  snow:          { hazard: 'ice',      friction: 0.15 },
+  water:         { hazard: 'current',  currentPush: 2 },
+  forest:        { hazard: null },
+  lava:          { hazard: null },
+  desert_night:  { hazard: 'sandstorm', windGust: 3 },
+  ice_cave:      { hazard: 'slippery', friction: 0.08 },
+  shadow_realm:  { hazard: 'darkness', visionRadius: 250 },
+  sky_temple:    { hazard: 'wind',     windUp: -1 },
+  ancient_ruins: { hazard: null }
+};
+
+// ============================================================
+// STORY BEATS
+// ============================================================
+const STORY_BEATS = {
+  0: { title: 'The Journey Begins',     subtitle: 'Escape the palace dungeons' },
+  1: { title: 'Into the Frozen Wastes', subtitle: 'The cold bites deep...' },
+  2: { title: 'The Water Trials',       subtitle: 'Currents test your resolve' },
+  3: { title: 'Whispers of the Forest', subtitle: 'Ancient trees watch you' },
+  4: { title: 'The Fiery Depths',       subtitle: 'Even flames cannot stop you' },
+  5: { title: 'Night of the Desert',    subtitle: 'Stars guide your blade' },
+  6: { title: 'Frozen Heart',           subtitle: 'The ice cave remembers' },
+  7: { title: 'Ruins of Ages Past',     subtitle: 'The ancients stir' },
+  8: { title: 'Shadows Within',         subtitle: 'The realm tests your soul' },
+  9: { title: 'The Sky Temple',         subtitle: 'Ascend to legend' }
+};
+
+function getStoryBeat(worldIdx) {
+  return STORY_BEATS[worldIdx] || null;
+}
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+const ACHIEVEMENTS = {
+  first_blood: { name: '⚔️ First Blood',  desc: 'Kill your first enemy',        check: s => s.kills >= 1 },
+  speedrun:    { name: '⚡ Speedrunner',  desc: 'Finish a level in under 20s',  check: s => s.levelTime < 20 && s.levelsCompleted >= 1 },
+  untouchable: { name: '🛡️ Untouchable',  desc: 'Finish a level without damage',check: s => s.damageTaken === 0 && s.levelsCompleted >= 1 },
+  hoarder:     { name: '💰 Hoarder',      desc: 'Collect 100 coins',            check: s => s.coins >= 100 },
+  flymaster:   { name: '🕊️ Fly Master',   desc: 'Fly for 60s total',            check: s => s.flyTime >= 60 },
+  shieldwall:  { name: '🛡️ Shield Wall',  desc: 'Block 50 hits with shield',    check: s => s.blocks >= 50 },
+  survivor:    { name: '💀 Survivor',     desc: 'Reach stage 25',               check: s => s.stage >= 25 },
+  legend:      { name: '👑 Legend',       desc: 'Reach stage 50',               check: s => s.stage >= 50 }
+};
+
+// ============================================================
+// RUN SEED
+// ============================================================
+let runSeed = Date.now() % 100000;
+
+// ============================================================
+// TILE COUNTING
+// ============================================================
+function countTiles(raw) {
+  let archers = 0, guards = 0, coins = 0, spikes = 0;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const c = raw[y] && raw[y][x] ? raw[y][x] : '.';
+      if (c === 'A') archers++;
+      else if (c === 'G') guards++;
+      else if (c === 'C') coins++;
+      else if (c === '^') spikes++;
+    }
+  }
+  return { archers, guards, coins, spikes };
+}
+
+function trimEnemies(arr, rng) {
+  const positions = [];
+  for (let y = 0; y < ROWS; y++)
+    for (let x = 0; x < COLS; x++)
+      if (arr[y][x] === 'A' || arr[y][x] === 'G') positions.push([x, y]);
+
+  if (positions.length <= MAX_ENEMIES_PER_STAGE) return;
+
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor((rng ? rng() : Math.random()) * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+  const toRemove = positions.length - MAX_ENEMIES_PER_STAGE;
+  for (let i = 0; i < toRemove; i++) {
+    const [rx, ry] = positions[i];
+    arr[ry][rx] = '.';
+  }
+}
+
+// ============================================================
+// PROCEDURAL GENERATOR
+// ============================================================
+function generateProceduralLevel(worldKey, stageNum) {
+  const rng = seededRandom(stageNum * 7919 + worldKey.length * 104729 + 12345 + runSeed);
+  const worldLevels = LEVELS[worldKey];
+  const base = worldLevels[stageNum % worldLevels.length];
+  const out = [];
+  for (let y = 0; y < ROWS; y++) out.push(base[y].split(''));
+
+  const diff = getDifficulty(stageNum);
+  const counts = countTiles(base);
+
+  trimEnemies(out, rng);
+
+  const trimmed = countTiles(out.map(r => r.join('')));
+  let archersNow = trimmed.archers;
+  let guardsNow = trimmed.guards;
+
+  const coinsToAdd = Math.max(0, diff.coins - counts.coins);
+  for (let i = 0; i < coinsToAdd; i++) {
+    for (let tries = 0; tries < 20; tries++) {
+      const cx = 1 + Math.floor(rng() * (COLS - 2));
+      const cy = 1 + Math.floor(rng() * (ROWS - 2));
+      if (out[cy][cx] === '.') { out[cy][cx] = 'C'; break; }
+    }
+  }
+
+  const archersToAdd = Math.max(0, diff.archers - archersNow);
+  for (let a = 0; a < archersToAdd; a++) {
+    if (archersNow + guardsNow >= MAX_ENEMIES_PER_STAGE) break;
+    for (let tries = 0; tries < 20; tries++) {
+      const ax = 2 + Math.floor(rng() * (COLS - 4));
+      const ay = 1 + Math.floor(rng() * (ROWS - 2));
+      if (out[ay][ax] === '.') { out[ay][ax] = 'A'; archersNow++; break; }
+    }
+  }
+
+  const guardsToAdd = Math.max(0, diff.guards - guardsNow);
+  for (let g = 0; g < guardsToAdd; g++) {
+    if (archersNow + guardsNow >= MAX_ENEMIES_PER_STAGE) break;
+    for (let tries = 0; tries < 20; tries++) {
+      const gx = 2 + Math.floor(rng() * (COLS - 4));
+      const gy = 1 + Math.floor(rng() * (ROWS - 2));
+      if (out[gy][gx] === '.') { out[gy][gx] = 'G'; guardsNow++; break; }
+    }
+  }
+
+  let ex = -1, ey = -1;
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      if (out[y][x] === 'E') { ex = x; ey = y; break; }
+    }
+    if (ex >= 0) break;
+  }
+  if (ex >= 0) {
+    out[ey][ex] = '.';
+    const floorRow = ROWS - 2;
+    let placed = false;
+    for (let tries = 0; tries < 40 && !placed; tries++) {
+      const nx = 2 + Math.floor(rng() * (COLS - 4));
+      let ny = floorRow;
+      while (ny > 0 && out[ny][nx] === '#') ny--;
+      if (ny > 0 && (out[ny][nx] === '.' || out[ny][nx] === 'C')) {
+        out[ny][nx] = 'E';
+        placed = true;
+      }
+    }
+    if (!placed) out[ey][ex] = 'E';
+  }
+
+  const pc = Math.floor(rng() * 2 + (stageNum > 3 ? 1 : 0));
+  for (let p = 0; p < pc; p++) {
+    const px = 1 + Math.floor(rng() * (COLS - 4));
+    const py = 2 + Math.floor(rng() * (ROWS - 4));
+    const pw = 1 + Math.floor(rng() * 3);
+    for (let i = 0; i < pw; i++)
+      if (px + i < COLS - 1 && out[py][px + i] === '.') out[py][px + i] = '#';
+  }
+
+  const spikesToAdd = Math.max(0, diff.spikes - counts.spikes);
+  for (let s = 0; s < spikesToAdd; s++) {
+    const sx = 2 + Math.floor(rng() * (COLS - 6));
+    const sy = ROWS - 2;
+    const sw = 1 + Math.floor(rng() * 2);
+    for (let i = 0; i < sw; i++)
+      if (sx + i < COLS - 1 && out[sy][sx + i] === '.') out[sy][sx + i] = '^';
+  }
+
+  return out.map(r => r.join(''));
+}
+
+// ============================================================
+// LOOP COLOR PALETTES — random colors on world loop
+// ============================================================
+const LOOP_PALETTES = [
+  { name: '🌈 Rainbow',   accent: '#ff40c0', blockTop: '#ff80d0', blockMid: '#a03080', blockBottom: '#3a0a2a',
+    bgTop: '#3a0a2a', bgMid: '#6a1050', bgBottom: '#1a0010', particle: '#ff80d0', star: '#ffd0f0' },
+  { name: '🌊 Cyber',     accent: '#00ffc0', blockTop: '#40f0c0', blockMid: '#008070', blockBottom: '#002a20',
+    bgTop: '#001a1a', bgMid: '#003a3a', bgBottom: '#000a0a', particle: '#40f0c0', star: '#80ffe0' },
+  { name: '🔥 Magma',     accent: '#ffaa00', blockTop: '#ff8020', blockMid: '#a03010', blockBottom: '#3a0a03',
+    bgTop: '#2a0505', bgMid: '#6a1a05', bgBottom: '#0a0202', particle: '#ff6020', star: '#ffaa40' },
+  { name: '💜 Purple',    accent: '#c080ff', blockTop: '#d0a0ff', blockMid: '#7a40b0', blockBottom: '#2a0a4a',
+    bgTop: '#1a0a3a', bgMid: '#3a1a6a', bgBottom: '#05000a', particle: '#a060ff', star: '#e0c0ff' },
+  { name: '💚 Toxic',     accent: '#80ff40', blockTop: '#a0ff70', blockMid: '#40a030', blockBottom: '#0a3a0a',
+    bgTop: '#0a2a05', bgMid: '#1a5a10', bgBottom: '#020a02', particle: '#80ff40', star: '#c0ffa0' },
+  { name: '🌸 Sakura',    accent: '#ff80a0', blockTop: '#ffb0c0', blockMid: '#a04060', blockBottom: '#3a0a1a',
+    bgTop: '#3a0a1a', bgMid: '#7a2040', bgBottom: '#1a0008', particle: '#ff80a0', star: '#ffd0e0' },
+  { name: '🩵 Aqua',      accent: '#40d0ff', blockTop: '#80e0ff', blockMid: '#2080c0', blockBottom: '#001a3a',
+    bgTop: '#001a2a', bgMid: '#004a6a', bgBottom: '#00050a', particle: '#40d0ff', star: '#80e8ff' },
+  { name: '💛 Gold',      accent: '#ffd040', blockTop: '#ffe070', blockMid: '#b08020', blockBottom: '#3a2a00',
+    bgTop: '#3a2a05', bgMid: '#6a4a10', bgBottom: '#1a0a02', particle: '#ffd040', star: '#fff0a0' }
+];
+
+function getRandomLoopPalette() {
+  return LOOP_PALETTES[Math.floor(Math.random() * LOOP_PALETTES.length)];
+}
